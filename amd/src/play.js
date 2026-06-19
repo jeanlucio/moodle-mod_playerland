@@ -58,9 +58,13 @@ define([
                 const tileset = map.addTilesetImage('tileset', 'tileset');
                 const layer = map.createLayer('Tile Layer 1', tileset, 0, 0);
 
-                // Exact collision tile IDs from the original Sunny Land demo (game.js line 225).
-                // Only these specific tiles are solid — everything else is background/decoration.
+                // Solid tile IDs for THIS map (assets/maps/map.json), which differs from the
+                // original Sunny Land demo. The demo's list was missing this map's main ground
+                // tiles (79, 181, 183) — the most-used tile is 79 (the floor), so the player was
+                // falling straight through it. Flipped floor tiles share index 79 once Phaser
+                // strips the flip bits, so listing 79 covers them too.
                 const solidTiles = [
+                    79, 181, 183,
                     27, 29, 31, 33, 35, 37,
                     77, 81, 86, 87,
                     127, 129, 131, 133, 134, 135,
@@ -84,17 +88,20 @@ define([
                     }
                 });
 
-                // Enable visual debug for the tilemap collisions (temporary)
-                const debugGraphics = this.add.graphics().setAlpha(0.5);
+                // Temporary collision debug overlay. Cyan is used (not orange) because the
+                // tileset is brown/orange and the default orange overlay is invisible on it.
+                const debugGraphics = this.add.graphics().setAlpha(0.7);
                 layer.renderDebug(debugGraphics, {
                     tileColor: null,
-                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200),
-                    faceColor: new Phaser.Display.Color(40, 39, 37, 255)
+                    collidingTileColor: new Phaser.Display.Color(0, 220, 255, 180),
+                    faceColor: new Phaser.Display.Color(255, 0, 255, 255)
                 });
 
                 // Player — spawn at tile(54, 9) as per the original demo: createPlayer(54, 9)
-                // In pixel coords: 54*16 = 864, 9*16 = 144
-                this.player = this.physics.add.sprite(864, 144, 'atlas', 'player/idle/player-idle-1');
+                // In pixel coords: 54*16 = 864, 9*16 = 144. Stored so the player can respawn here.
+                this.spawnX = 864;
+                this.spawnY = 144;
+                this.player = this.physics.add.sprite(this.spawnX, this.spawnY, 'atlas', 'player/idle/player-idle-1');
 
                 // Match the original demo's player body: body.setSize(12, 16, 8, 16)
                 // Phaser 3 setSize(width, height) + setOffset(x, y)
@@ -103,6 +110,12 @@ define([
 
                 this.player.setCollideWorldBounds(true);
                 this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+                // Keep the left/right/top walls, but disable the bottom wall so the player
+                // falls out through real pits (gaps in the floor) instead of resting on the
+                // world edge. A death line below the map triggers an automatic respawn.
+                this.physics.world.setBoundsCollision(true, true, true, false);
+                this.deathY = map.heightInPixels + 64;
 
                 // Collisions
                 this.physics.add.collider(this.player, layer);
@@ -120,6 +133,9 @@ define([
                     down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
                     right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
                 };
+
+                // Manual respawn key (R) — escape hatch while testing if the player gets stuck.
+                this.respawnKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
                 // Question Blocks
                 this.questionBlocks = this.physics.add.staticGroup();
@@ -147,6 +163,12 @@ define([
                 if (this.isModalOpen) {
                     this.player.setVelocityX(0);
                     this.player.anims.play('player-idle', true);
+                    return;
+                }
+
+                // Respawn on manual key press or after falling past the death line.
+                if (Phaser.Input.Keyboard.JustDown(this.respawnKey) || this.player.y > this.deathY) {
+                    this.respawn();
                     return;
                 }
 
@@ -186,6 +208,15 @@ define([
                 // Scroll parallax backgrounds
                 this.bgBack.tilePositionX = this.cameras.main.scrollX * 0.1;
                 this.bgMiddle.tilePositionX = this.cameras.main.scrollX * 0.3;
+            }
+
+            /**
+             * Resets the player to the spawn point, clearing any momentum.
+             */
+            respawn() {
+                this.player.setVelocity(0, 0);
+                this.player.setPosition(this.spawnX, this.spawnY);
+                this.player.anims.play('player-idle', true);
             }
 
             async hitQuestionBlock(player, block) {
