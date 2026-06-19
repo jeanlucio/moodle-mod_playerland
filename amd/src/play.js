@@ -116,15 +116,15 @@ define([
                 // ENTER restarts the level after completion.
                 this.startKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
-                // Groups populated from the "Objetos" layer below.
+                // Groups populated from the "objects" layer below.
                 this.questionBlocks = this.physics.add.staticGroup();
                 this.collectibles = this.physics.add.group({allowGravity: false});
                 this.enemies = this.physics.add.group();
 
-                // Read the "Objetos" layer from Tiled: cherries, gems, question blocks, enemies
+                // Read the "objects" layer from Tiled: cherries, gems, question blocks, enemies
                 // and the exit. The level designer places markers in Tiled; the behaviour lives
                 // here in code.
-                const objects = map.getObjectLayer('Objetos');
+                const objects = map.getObjectLayer('objects');
                 if (objects) {
                     objects.objects.forEach(obj => {
                         const kind = obj.type || obj.name;
@@ -418,9 +418,9 @@ define([
                 }
                 this.isDying = true;
 
-                // Knock the player up and away from the enemy.
+                // Small knock up and away from the enemy (gentle, so it does not fly into things).
                 const dir = this.player.x < enemy.x ? -1 : 1;
-                this.player.setVelocity(dir * 120, -200);
+                this.player.setVelocity(dir * 60, -160);
                 this.player.setTint(0xff6666);
                 this.player.anims.play('player-hurt', true);
 
@@ -450,7 +450,7 @@ define([
                 if (!(player.body.blocked.up || player.body.touching.up)) {
                     return;
                 }
-                if (this.isModalOpen || block.getData('used')) {
+                if (this.isModalOpen || this.isDying || block.getData('used')) {
                     return;
                 }
                 this.isModalOpen = true;
