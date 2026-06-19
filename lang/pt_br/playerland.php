@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Brazilian Portuguese strings for playerland.
+ * Portuguese strings for playerland.
  *
  * @package    mod_playerland
  * @copyright  2026 Jean Lúcio
@@ -24,19 +24,20 @@
 
 // phpcs:disable moodle.Files.LineLength
 
-$string['modulename'] = 'PlayerLand';
-$string['modulename_help'] = 'A atividade PlayerLand permite que os estudantes joguem um jogo de plataforma 2D (estilo Super Mario). Bater nos blocos de interrogação abrirá um modal de pergunta do Moodle. Respostas corretas concedem recompensas e progresso. O professor pode configurar múltiplas fases e notas proporcionais.';
-$string['modulenameplural'] = 'PlayerLands';
-$string['pluginadministration'] = 'Administração do PlayerLand';
-$string['pluginname'] = 'PlayerLand';
-$string['managequestions'] = 'Gerenciar perguntas';
 $string['addquestion'] = 'Adicionar pergunta';
-$string['question'] = 'Pergunta';
+$string['confirmdeletequestion'] = 'Tem certeza que deseja excluir esta pergunta?';
+$string['error_no_correct_option'] = 'Você deve selecionar uma opção correta.';
+$string['iscorrect'] = 'Alternativa correta';
+$string['managequestions'] = 'Gerenciar perguntas';
+$string['modulename'] = 'PlayerLand';
+$string['modulename_help'] = 'The PlayerLand activity allows students to play a 2D platformer game (like Super Mario). Hitting question blocks will trigger a Moodle question modal. Correct answers yield rewards and progress. The teacher can configure multiple levels and proportional grading.';
+$string['modulenameplural'] = 'PlayerLands';
+$string['noquestions'] = 'Nenhuma pergunta foi adicionada ainda.';
 $string['option'] = 'Opção';
 $string['optiontext'] = 'Texto da opção';
-$string['iscorrect'] = 'Alternativa correta';
-$string['error_no_correct_option'] = 'Você deve selecionar uma opção correta.';
-$string['questionsaved'] = 'Pergunta salva com sucesso.';
+$string['pluginadministration'] = 'Administração do PlayerLand';
+$string['pluginname'] = 'PlayerLand';
+$string['question'] = 'Pergunta';
 $string['questiondeleted'] = 'Pergunta excluída.';
-$string['confirmdeletequestion'] = 'Tem certeza que deseja excluir esta pergunta?';
-$string['noquestions'] = 'Nenhuma pergunta foi adicionada ainda.';
+$string['questionsaved'] = 'Pergunta salva com sucesso.';
+$string['questiontext'] = 'Texto da pergunta';
