@@ -59,6 +59,15 @@ $config = [
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(format_string($playerland->name));
+
+if (has_capability('mod/playerland:manage', $context)) {
+    $manageurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cm->id]);
+    echo html_writer::div(
+        html_writer::link($manageurl, get_string('managequestions', 'mod_playerland'), ['class' => 'btn btn-secondary mb-3']),
+        'text-right'
+    );
+}
+
 if (!empty($playerland->intro)) {
     echo $OUTPUT->box(
         format_module_intro('playerland', $playerland, $cm->id),
