@@ -42,7 +42,7 @@ class external extends external_api {
     public static function save_progress_parameters() {
         return new external_function_parameters([
             'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
-            'blocksresolved' => new external_value(PARAM_INT, 'Number of blocks resolved')
+            'blocksresolved' => new external_value(PARAM_INT, 'Number of blocks resolved'),
         ]);
     }
 
@@ -58,7 +58,7 @@ class external extends external_api {
 
         $params = self::validate_parameters(self::save_progress_parameters(), [
             'playerlandid' => $playerlandid,
-            'blocksresolved' => $blocksresolved
+            'blocksresolved' => $blocksresolved,
         ]);
 
         $cm = get_coursemodule_from_instance('playerland', $params['playerlandid'], 0, false, MUST_EXIST);
@@ -67,7 +67,7 @@ class external extends external_api {
         require_capability('mod/playerland:view', $context);
 
         $attempt = $DB->get_record('playerland_atmpt', ['playerlandid' => $params['playerlandid'], 'userid' => $USER->id]);
-        
+
         if ($attempt) {
             $attempt->blocksresolved = $params['blocksresolved'];
             $attempt->timemodified = time();
@@ -93,7 +93,7 @@ class external extends external_api {
      */
     public static function save_progress_returns() {
         return new external_single_structure([
-            'status' => new external_value(PARAM_BOOL, 'Status of the operation')
+            'status' => new external_value(PARAM_BOOL, 'Status of the operation'),
         ]);
     }
 
@@ -104,7 +104,7 @@ class external extends external_api {
      */
     public static function get_question_parameters() {
         return new external_function_parameters([
-            'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id')
+            'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
         ]);
     }
 
@@ -118,7 +118,7 @@ class external extends external_api {
         global $DB;
 
         $params = self::validate_parameters(self::get_question_parameters(), [
-            'playerlandid' => $playerlandid
+            'playerlandid' => $playerlandid,
         ]);
 
         $cm = get_coursemodule_from_instance('playerland', $params['playerlandid'], 0, false, MUST_EXIST);
@@ -126,41 +126,41 @@ class external extends external_api {
         self::validate_context($context);
         require_capability('mod/playerland:view', $context);
 
-        // Fetch a random question for this instance
+        // Fetch a random question for this instance.
         $sql = "SELECT id, questiontext FROM {playerland_q} WHERE playerlandid = ? ORDER BY RANDOM()";
         // Wait, Moodle DB abstraction doesn't support ORDER BY RANDOM() universally. Let's fetch all and pick one.
         $questions = $DB->get_records('playerland_q', ['playerlandid' => $params['playerlandid']]);
-        
+
         if (empty($questions)) {
-            // No questions configured yet
+            // No questions configured yet.
             return [
                 'hasquestion' => false,
                 'questionid' => 0,
                 'questiontext' => '',
-                'options' => []
+                'options' => [],
             ];
         }
 
         $randomq = $questions[array_rand($questions)];
-        
-        // Fetch options
+
+        // Fetch options.
         $options = $DB->get_records('playerland_opts', ['questionid' => $randomq->id], 'id ASC');
         $optsarray = [];
         foreach ($options as $opt) {
             $optsarray[] = [
                 'id' => $opt->id,
-                'optiontext' => $opt->optiontext
+                'optiontext' => $opt->optiontext,
             ];
         }
 
-        // Shuffle options so the correct one is not always in the same place if they were inserted sequentially
+        // Shuffle options so the correct one is not always in the same place if they were inserted sequentially.
         shuffle($optsarray);
 
         return [
             'hasquestion' => true,
             'questionid' => $randomq->id,
             'questiontext' => $randomq->questiontext,
-            'options' => $optsarray
+            'options' => $optsarray,
         ];
     }
 
@@ -177,9 +177,9 @@ class external extends external_api {
             'options' => new external_multiple_structure(
                 new external_single_structure([
                     'id' => new external_value(PARAM_INT, 'Option ID'),
-                    'optiontext' => new external_value(PARAM_TEXT, 'Option text')
-                ])
-            )
+                    'optiontext' => new external_value(PARAM_TEXT, 'Option text'),
+                ]),
+            ),
         ]);
     }
 
@@ -192,7 +192,7 @@ class external extends external_api {
         return new external_function_parameters([
             'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
             'questionid' => new external_value(PARAM_INT, 'The question id'),
-            'optionid' => new external_value(PARAM_INT, 'The chosen option id')
+            'optionid' => new external_value(PARAM_INT, 'The chosen option id'),
         ]);
     }
 
@@ -210,7 +210,7 @@ class external extends external_api {
         $params = self::validate_parameters(self::check_answer_parameters(), [
             'playerlandid' => $playerlandid,
             'questionid' => $questionid,
-            'optionid' => $optionid
+            'optionid' => $optionid,
         ]);
 
         $cm = get_coursemodule_from_instance('playerland', $params['playerlandid'], 0, false, MUST_EXIST);
@@ -219,14 +219,14 @@ class external extends external_api {
         require_capability('mod/playerland:view', $context);
 
         $option = $DB->get_record('playerland_opts', ['id' => $params['optionid'], 'questionid' => $params['questionid']]);
-        
+
         $correct = false;
         if ($option && $option->iscorrect) {
             $correct = true;
         }
 
         return [
-            'correct' => $correct
+            'correct' => $correct,
         ];
     }
 
@@ -237,7 +237,7 @@ class external extends external_api {
      */
     public static function check_answer_returns() {
         return new external_single_structure([
-            'correct' => new external_value(PARAM_BOOL, 'Whether the answer is correct')
+            'correct' => new external_value(PARAM_BOOL, 'Whether the answer is correct'),
         ]);
     }
 }

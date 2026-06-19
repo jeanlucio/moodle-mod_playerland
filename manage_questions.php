@@ -73,7 +73,7 @@ if ($mform->is_cancelled()) {
 
     // Process options.
     $existingopts = $DB->get_records('playerland_opts', ['questionid' => $qid]);
-    
+
     // We only support 4 options in the form.
     for ($i = 1; $i <= 4; $i++) {
         $opttext = $data->optiontext[$i] ?? '';
@@ -110,15 +110,15 @@ if ($action === 'add' || $action === 'edit') {
     if ($action === 'edit' && $questionid) {
         $question = $DB->get_record('playerland_q', ['id' => $questionid], '*', MUST_EXIST);
         $options = $DB->get_records('playerland_opts', ['questionid' => $questionid], 'id ASC');
-        
+
         $formdata = new stdClass();
         $formdata->qid = $question->id;
         $formdata->cmid = $cm->id;
         $formdata->questiontext = [
             'text' => $question->questiontext,
-            'format' => $question->questionformat
+            'format' => $question->questionformat,
         ];
-        
+
         $i = 1;
         foreach ($options as $opt) {
             $formdata->{"optionid[$i]"} = $opt->id;
@@ -128,43 +128,45 @@ if ($action === 'add' || $action === 'edit') {
             }
             $i++;
         }
-        
+
         $mform->set_data($formdata);
     } else {
         $mform->set_data(['cmid' => $cm->id]);
     }
-    
+
     $mform->display();
 } else {
     // List existing questions.
     $questions = $DB->get_records('playerland_q', ['playerlandid' => $playerland->id], 'id ASC');
-    
+
     $addurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cmid, 'action' => 'add']);
     echo html_writer::link($addurl, get_string('addquestion', 'mod_playerland'), ['class' => 'btn btn-primary mb-3']);
-    
+
     if (empty($questions)) {
         echo $OUTPUT->notification(get_string('noquestions', 'mod_playerland'), 'info');
     } else {
         $table = new html_table();
         $table->head = [get_string('question', 'mod_playerland'), get_string('actions')];
         $table->data = [];
-        
+
         foreach ($questions as $q) {
-            $editurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cmid, 'action' => 'edit', 'qid' => $q->id]);
+            $editurl = new moodle_url('/mod/playerland/manage_questions.php',
+                ['id' => $cmid, 'action' => 'edit', 'qid' => $q->id]);
             $delurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cmid, 'action' => 'delete', 'qid' => $q->id, 'sesskey' => sesskey()]);
-            
+
             $actions = html_writer::link($editurl, $OUTPUT->pix_icon('t/edit', get_string('edit'))) . '&nbsp;';
-            $actions .= html_writer::link($delurl, $OUTPUT->pix_icon('t/delete', get_string('delete')), ['data-confirm' => get_string('confirmdeletequestion', 'mod_playerland')]);
-            
+            $actions .= html_writer::link($delurl, $OUTPUT->pix_icon('t/delete', get_string('delete')),
+                ['data-confirm' => get_string('confirmdeletequestion', 'mod_playerland')]);
+
             $table->data[] = [
                 format_text($q->questiontext, $q->questionformat),
-                $actions
+                $actions,
             ];
         }
-        
+
         echo html_writer::table($table);
     }
-    
+
     $backurl = new moodle_url('/mod/playerland/view.php', ['id' => $cmid]);
     echo html_writer::link($backurl, get_string('back', 'core'), ['class' => 'btn btn-secondary mt-3']);
 }

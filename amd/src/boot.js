@@ -48,11 +48,11 @@ define([], function() {
             });
             loadingText.setOrigin(0.5, 0.5);
 
-            this.load.on('progress', function (value) {
+            this.load.on('progress', function(value) {
                 loadingText.setText('Loading... ' + Math.floor(value * 100) + '%');
             });
 
-            this.load.on('complete', function () {
+            this.load.on('complete', function() {
                 loadingText.destroy();
             });
 
@@ -84,35 +84,35 @@ define([], function() {
             // Create animations from the atlas
             this.anims.create({
                 key: 'player-idle',
-                frames: this.anims.generateFrameNames('atlas', { prefix: 'player/idle/player-idle-', start: 1, end: 4 }),
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'player/idle/player-idle-', start: 1, end: 4}),
                 frameRate: 8,
                 repeat: -1
             });
 
             this.anims.create({
                 key: 'player-run',
-                frames: this.anims.generateFrameNames('atlas', { prefix: 'player/run/player-run-', start: 1, end: 6 }),
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'player/run/player-run-', start: 1, end: 6}),
                 frameRate: 12,
                 repeat: -1
             });
 
             this.anims.create({
                 key: 'player-jump',
-                frames: this.anims.generateFrameNames('atlas', { prefix: 'player/jump/player-jump-', start: 1, end: 2 }),
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'player/jump/player-jump-', start: 1, end: 2}),
                 frameRate: 10,
                 repeat: 0
             });
 
             this.anims.create({
                 key: 'player-hurt',
-                frames: this.anims.generateFrameNames('atlas', { prefix: 'player/hurt/player-hurt-', start: 1, end: 2 }),
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'player/hurt/player-hurt-', start: 1, end: 2}),
                 frameRate: 10,
                 repeat: 0
             });
 
             // Start the main play scene
-            this.scene.start('PlayScene', { gameConfig: this.gameConfig });
+            this.scene.start('PlayScene', {gameConfig: this.gameConfig});
         }
-        }
+        };
     };
 });

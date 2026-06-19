@@ -175,7 +175,7 @@ define([
             }
 
             if (isUp && this.player.body.onFloor()) {
-                this.player.setVelocityY(-170); // Original demo value
+                this.player.setVelocityY(-250); // Increased from -170 to allow jumping out of 2-block holes
             }
 
             if (!this.player.body.onFloor()) {
