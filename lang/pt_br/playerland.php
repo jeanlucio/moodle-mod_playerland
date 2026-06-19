@@ -25,9 +25,12 @@
 // phpcs:disable moodle.Files.LineLength
 
 $string['addquestion'] = 'Adicionar pergunta';
+$string['answercorrect'] = 'Correto! Muito bem.';
+$string['answerincorrect'] = 'Incorreto. Continue tentando!';
 $string['confirmdeletequestion'] = 'Tem certeza que deseja excluir esta pergunta?';
 $string['error_no_correct_option'] = 'Você deve selecionar uma opção correta.';
 $string['iscorrect'] = 'Alternativa correta';
+$string['levelcomplete'] = 'Fase concluída!';
 $string['managequestions'] = 'Gerenciar perguntas';
 $string['modulename'] = 'PlayerLand';
 $string['modulename_help'] = 'The PlayerLand activity allows students to play a 2D platformer game (like Super Mario). Hitting question blocks will trigger a Moodle question modal. Correct answers yield rewards and progress. The teacher can configure multiple levels and proportional grading.';
@@ -37,7 +40,9 @@ $string['option'] = 'Opção';
 $string['optiontext'] = 'Texto da opção';
 $string['pluginadministration'] = 'Administração do PlayerLand';
 $string['pluginname'] = 'PlayerLand: As Aventuras de Huddy';
+$string['pressenter'] = 'Aperte ENTER para recomeçar';
 $string['question'] = 'Pergunta';
 $string['questiondeleted'] = 'Pergunta excluída.';
 $string['questionsaved'] = 'Pergunta salva com sucesso.';
 $string['questiontext'] = 'Texto da pergunta';
+$string['score'] = 'Pontos: {$a}';

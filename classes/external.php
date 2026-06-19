@@ -24,11 +24,11 @@
 
 namespace mod_playerland;
 
-use external_api;
-use external_function_parameters;
-use external_value;
-use external_single_structure;
-use external_multiple_structure;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 /**
  * External functions for playerland.
@@ -149,7 +149,7 @@ class external extends external_api {
         foreach ($options as $opt) {
             $optsarray[] = [
                 'id' => $opt->id,
-                'optiontext' => $opt->optiontext,
+                'optiontext' => format_string($opt->optiontext, true, ['context' => $context]),
             ];
         }
 
@@ -159,7 +159,7 @@ class external extends external_api {
         return [
             'hasquestion' => true,
             'questionid' => $randomq->id,
-            'questiontext' => $randomq->questiontext,
+            'questiontext' => format_string($randomq->questiontext, true, ['context' => $context]),
             'options' => $optsarray,
         ];
     }
@@ -173,11 +173,11 @@ class external extends external_api {
         return new external_single_structure([
             'hasquestion' => new external_value(PARAM_BOOL, 'Whether a question was found'),
             'questionid' => new external_value(PARAM_INT, 'Question ID'),
-            'questiontext' => new external_value(PARAM_TEXT, 'Question text'),
+            'questiontext' => new external_value(PARAM_RAW, 'Question text'),
             'options' => new external_multiple_structure(
                 new external_single_structure([
                     'id' => new external_value(PARAM_INT, 'Option ID'),
-                    'optiontext' => new external_value(PARAM_TEXT, 'Option text'),
+                    'optiontext' => new external_value(PARAM_RAW, 'Option text'),
                 ]),
             ),
         ]);
@@ -225,8 +225,17 @@ class external extends external_api {
             $correct = true;
         }
 
+        // The correct option for this question, so the client can highlight it on a wrong answer.
+        $correctoption = $DB->get_record(
+            'playerland_opts',
+            ['questionid' => $params['questionid'], 'iscorrect' => 1],
+            'id',
+            IGNORE_MULTIPLE
+        );
+
         return [
             'correct' => $correct,
+            'correctoptionid' => $correctoption ? (int) $correctoption->id : 0,
         ];
     }
 
@@ -238,6 +247,7 @@ class external extends external_api {
     public static function check_answer_returns() {
         return new external_single_structure([
             'correct' => new external_value(PARAM_BOOL, 'Whether the answer is correct'),
+            'correctoptionid' => new external_value(PARAM_INT, 'The id of the correct option'),
         ]);
     }
 }

@@ -78,6 +78,15 @@ define([], function() {
                 'font-weight="bold" fill="#000" text-anchor="middle">?</text></svg>'
             ];
             this.load.svg('question_block', 'data:image/svg+xml;base64,' + btoa(svgParts.join('')));
+
+            // Exit flag (temporary placeholder art, generated as an SVG like the question block).
+            const flagParts = [
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="24">',
+                '<rect x="2" y="0" width="2" height="24" fill="#8a5a2b"/>',
+                '<polygon points="4,2 14,6 4,10" fill="#e23b3b" stroke="#7a1f1f" stroke-width="1"/>',
+                '</svg>'
+            ];
+            this.load.svg('exit_flag', 'data:image/svg+xml;base64,' + btoa(flagParts.join('')));
         }
 
         create() {
@@ -107,6 +116,28 @@ define([], function() {
                 key: 'player-hurt',
                 frames: this.anims.generateFrameNames('atlas', {prefix: 'player/hurt/player-hurt-', start: 1, end: 2}),
                 frameRate: 10,
+                repeat: 0
+            });
+
+            // Collectible and feedback animations (sprites already present in the atlas).
+            this.anims.create({
+                key: 'cherry',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'cherry/cherry-', start: 1, end: 7}),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'gem',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'gem/gem-', start: 1, end: 5}),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'item-feedback',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'item-feedback/item-feedback-', start: 1, end: 4}),
+                frameRate: 12,
                 repeat: 0
             });
 

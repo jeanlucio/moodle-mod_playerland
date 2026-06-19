@@ -49,12 +49,13 @@ define([
             width: 800,
             height: 600,
             parent: 'playerland-game-container',
+            backgroundColor: '#2d4a52', // Matches the dark background art, hides any camera gap.
             pixelArt: true, // Crucial for crisp pixel art!
             physics: {
                 "default": 'arcade',
                 arcade: {
                     gravity: {y: 500}, // Original demo value
-                    debug: true
+                    debug: false
                 }
             },
             scene: [bootScene, playScene]
