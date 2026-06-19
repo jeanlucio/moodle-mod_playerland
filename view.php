@@ -38,7 +38,7 @@ require_capability('mod/playerland:view', $context);
 // Trigger course_module_viewed event.
 $event = \mod_playerland\event\course_module_viewed::create([
     'objectid' => $playerland->id,
-    'context' => $context
+    'context' => $context,
 ]);
 $event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('course', $course);
@@ -76,7 +76,7 @@ if (!empty($playerland->intro)) {
     );
 }
 
-// Optional inline styling for the game container
+// Optional inline styling for the game container.
 echo \html_writer::tag('style', '
     #playerland-game-wrapper {
         width: 100%;

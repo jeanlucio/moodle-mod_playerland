@@ -37,6 +37,7 @@ $string['option'] = 'Option';
 $string['optiontext'] = 'Option text';
 $string['pluginadministration'] = 'PlayerLand administration';
 $string['pluginname'] = 'PlayerLand';
+$string['playerland:addinstance'] = 'Add a new PlayerLand';
 $string['question'] = 'Question';
 $string['questiondeleted'] = 'Question deleted.';
 $string['questionsaved'] = 'Question saved successfully.';
