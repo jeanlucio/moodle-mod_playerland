@@ -36,7 +36,9 @@ define([
      */
     const startPhaser = function(config) {
         // Instantiate the classes using the factory functions now that Phaser is loaded
+        // eslint-disable-next-line @babel/new-cap
         const BootSceneClass = BootScene();
+        // eslint-disable-next-line @babel/new-cap
         const PlaySceneClass = PlayScene();
 
         const bootScene = new BootSceneClass();
@@ -49,9 +51,9 @@ define([
             parent: 'playerland-game-container',
             pixelArt: true, // Crucial for crisp pixel art!
             physics: {
-                default: 'arcade',
+                "default": 'arcade',
                 arcade: {
-                    gravity: { y: 500 }, // Original demo value
+                    gravity: {y: 500}, // Original demo value
                     debug: true
                 }
             },
@@ -59,7 +61,7 @@ define([
         };
 
         const game = new Phaser.Game(phaserConfig);
-        game.scene.start('BootScene', { gameConfig: config });
+        game.scene.start('BootScene', {gameConfig: config});
     };
 
     return {
