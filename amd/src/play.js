@@ -175,7 +175,7 @@ define([
             }
 
             if (isUp && this.player.body.onFloor()) {
-                this.player.setVelocityY(-250); // Increased from -170 to allow jumping out of 2-block holes
+                this.player.setVelocityY(-350); // Increased to allow jumping over 3-block walls comfortably
             }
 
             if (!this.player.body.onFloor()) {
