@@ -27,10 +27,10 @@ define([
     'core/ajax',
     'core/modal',
     'core/str'
-], function (ajax, Modal, str) {
+], function(ajax, Modal, str) {
     'use strict';
 
-    return function () {
+    return function() {
         return class PlayScene extends Phaser.Scene {
             constructor() {
                 super('PlayScene');
@@ -54,7 +54,7 @@ define([
                 this.bgMiddle.setScale(mapHeight / 240);
 
                 // Tilemap
-                const map = this.make.tilemap({ key: 'map' });
+                const map = this.make.tilemap({key: 'map'});
                 const tileset = map.addTilesetImage('tileset', 'tileset');
                 const layer = map.createLayer('Tile Layer 1', tileset, 0, 0);
 
@@ -126,12 +126,12 @@ define([
 
                 // Place question blocks at meaningful positions on the map
                 const blockPositions = [
-                    { x: 30 * 16, y: 5 * 16 },
-                    { x: 44 * 16, y: 12 * 16 },
-                    { x: 23 * 16, y: 17 * 16 },
-                    { x: 88 * 16, y: 5 * 16 },
-                    { x: 102 * 16, y: 12 * 16 },
-                    { x: 81 * 16, y: 17 * 16 }
+                    {x: 30 * 16, y: 5 * 16},
+                    {x: 44 * 16, y: 12 * 16},
+                    {x: 23 * 16, y: 17 * 16},
+                    {x: 88 * 16, y: 5 * 16},
+                    {x: 102 * 16, y: 12 * 16},
+                    {x: 81 * 16, y: 17 * 16}
                 ];
 
                 blockPositions.forEach(pos => {
@@ -206,7 +206,7 @@ define([
                 try {
                     const response = await ajax.call([{
                         methodname: 'mod_playerland_get_question',
-                        args: { playerlandid: this.gameConfig.id }
+                        args: {playerlandid: this.gameConfig.id}
                     }])[0];
 
                     const strQuestion = await str.get_string('question', 'mod_playerland');
@@ -219,7 +219,7 @@ define([
                     } else {
                         bodyHtml = '<p><strong>' + response.questiontext + '</strong></p>';
                         bodyHtml += '<div class="d-flex flex-column gap-2 mt-3">';
-                        response.options.forEach(function (opt) {
+                        response.options.forEach(function(opt) {
                             bodyHtml += '<button class="btn btn-outline-primary btn-answer" data-optid="' + opt.id + '">' +
                                 opt.optiontext + '</button>';
                         });
@@ -235,13 +235,13 @@ define([
                     modal.show();
 
                     if (!response.hasquestion) {
-                        modal.getRoot().on('click', '#btn-close-modal', function () {
+                        modal.getRoot().on('click', '#btn-close-modal', function() {
                             modal.hide();
                             modal.destroy();
                             self.isModalOpen = false;
                         });
                     } else {
-                        modal.getRoot().on('click', '.btn-answer', async function (e) {
+                        modal.getRoot().on('click', '.btn-answer', async function(e) {
                             const optionId = e.currentTarget.getAttribute('data-optid');
 
                             // Check answer via webservice
@@ -280,7 +280,7 @@ define([
                         });
                     }
 
-                    modal.getRoot().on('modal:hidden', function () {
+                    modal.getRoot().on('modal:hidden', function() {
                         if (self.isModalOpen) {
                             self.isModalOpen = false;
                         }
