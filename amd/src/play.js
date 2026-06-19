@@ -53,7 +53,7 @@ define([
             this.bgMiddle.setScale(mapHeight / 240);
 
             // Tilemap
-            const map = this.make.tilemap({ key: 'map' });
+            const map = this.make.tilemap({key: 'map'});
             const tileset = map.addTilesetImage('tileset', 'tileset');
             const layer = map.createLayer('Tile Layer 1', tileset, 0, 0);
 
@@ -125,12 +125,12 @@ define([
 
             // Place question blocks at meaningful positions on the map
             const blockPositions = [
-                { x: 30 * 16, y: 5 * 16 },
-                { x: 44 * 16, y: 12 * 16 },
-                { x: 23 * 16, y: 17 * 16 },
-                { x: 88 * 16, y: 5 * 16 },
-                { x: 102 * 16, y: 12 * 16 },
-                { x: 81 * 16, y: 17 * 16 }
+                {x: 30 * 16, y: 5 * 16},
+                {x: 44 * 16, y: 12 * 16},
+                {x: 23 * 16, y: 17 * 16},
+                {x: 88 * 16, y: 5 * 16},
+                {x: 102 * 16, y: 12 * 16},
+                {x: 81 * 16, y: 17 * 16}
             ];
 
             blockPositions.forEach(pos => {
@@ -199,13 +199,13 @@ define([
 
             // Player bounces back down slightly
             player.setVelocityY(50);
-            
+
             const self = this;
 
             try {
                 const response = await ajax.call([{
                     methodname: 'mod_playerland_get_question',
-                    args: { playerlandid: this.gameConfig.id }
+                    args: {playerlandid: this.gameConfig.id}
                 }])[0];
 
                 let bodyHtml = '';
@@ -216,7 +216,8 @@ define([
                     bodyHtml = '<p><strong>' + response.questiontext + '</strong></p>';
                     bodyHtml += '<div class="d-flex flex-column gap-2 mt-3">';
                     response.options.forEach(function(opt) {
-                        bodyHtml += '<button class="btn btn-outline-primary btn-answer" data-optid="' + opt.id + '">' + opt.optiontext + '</button>';
+                        bodyHtml += '<button class="btn btn-outline-primary btn-answer" data-optid="' + opt.id + '">' +
+                            opt.optiontext + '</button>';
                     });
                     bodyHtml += '</div>';
                 }
@@ -238,7 +239,7 @@ define([
                 } else {
                     modal.getRoot().on('click', '.btn-answer', async function(e) {
                         const optionId = e.currentTarget.getAttribute('data-optid');
-                        
+
                         // Check answer via webservice
                         try {
                             const checkResult = await ajax.call([{
@@ -249,10 +250,10 @@ define([
                                     optionid: optionId
                                 }
                             }])[0];
-                            
+
                             modal.hide();
                             modal.destroy();
-                            
+
                             if (checkResult.correct) {
                                 // Correct! Destroy block and save progress
                                 block.destroy();
@@ -266,7 +267,7 @@ define([
                             } else {
                                 // Wrong! Just close modal and maybe play an error sound
                             }
-                            
+
                             self.isModalOpen = false;
                         } catch (err) {
                             window.console.error(err);
@@ -286,6 +287,6 @@ define([
                 this.isModalOpen = false;
             }
         }
-        }
+        };
     };
 });
