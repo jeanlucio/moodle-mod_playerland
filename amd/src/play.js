@@ -127,7 +127,10 @@ define([
             const blockPositions = [
                 { x: 30 * 16, y: 5 * 16 },
                 { x: 44 * 16, y: 12 * 16 },
-                { x: 23 * 16, y: 17 * 16 }
+                { x: 23 * 16, y: 17 * 16 },
+                { x: 88 * 16, y: 5 * 16 },
+                { x: 102 * 16, y: 12 * 16 },
+                { x: 81 * 16, y: 17 * 16 }
             ];
 
             blockPositions.forEach(pos => {
