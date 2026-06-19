@@ -150,13 +150,21 @@ if ($action === 'add' || $action === 'edit') {
         $table->data = [];
 
         foreach ($questions as $q) {
-            $editurl = new moodle_url('/mod/playerland/manage_questions.php',
-                ['id' => $cmid, 'action' => 'edit', 'qid' => $q->id]);
-            $delurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cmid, 'action' => 'delete', 'qid' => $q->id, 'sesskey' => sesskey()]);
+            $editurl = new moodle_url(
+                '/mod/playerland/manage_questions.php',
+                ['id' => $cmid, 'action' => 'edit', 'qid' => $q->id]
+            );
+            $delurl = new moodle_url(
+                '/mod/playerland/manage_questions.php',
+                ['id' => $cmid, 'action' => 'delete', 'qid' => $q->id, 'sesskey' => sesskey()]
+            );
 
             $actions = html_writer::link($editurl, $OUTPUT->pix_icon('t/edit', get_string('edit'))) . '&nbsp;';
-            $actions .= html_writer::link($delurl, $OUTPUT->pix_icon('t/delete', get_string('delete')),
-                ['data-confirm' => get_string('confirmdeletequestion', 'mod_playerland')]);
+            $actions .= html_writer::link(
+                $delurl,
+                $OUTPUT->pix_icon('t/delete', get_string('delete')),
+                ['data-confirm' => get_string('confirmdeletequestion', 'mod_playerland')]
+            );
 
             $table->data[] = [
                 format_text($q->questiontext, $q->questionformat),

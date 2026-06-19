@@ -48,5 +48,5 @@ $functions = [
         'description' => 'Checks if the answer provided is correct',
         'type'        => 'write',
         'ajax'        => true,
-    ]
+    ],
 ];
