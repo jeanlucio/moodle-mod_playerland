@@ -455,7 +455,6 @@ define([
                 }
                 this.isModalOpen = true;
                 player.setVelocityY(50); // Small bounce down.
-                this.physics.pause(); // Freeze the player and enemies while the question is open.
 
                 // Bump the block the instant it is hit (before the modal opens).
                 this.celebrateBlock(block);
@@ -470,8 +469,12 @@ define([
                 ]);
                 const [strQuestion, strNoQuestions, strCorrect, strIncorrect, strContinue] = strings;
 
-                // Let the bump play before the modal covers the block.
-                await new Promise(resolve => self.time.delayedCall(260, resolve));
+                // Brief beat so the block bump is seen before the modal opens.
+                await new Promise(resolve => self.time.delayedCall(150, resolve));
+
+                // Now freeze everything (movement and animations) for a real pause.
+                this.physics.pause();
+                this.anims.pauseAll();
 
                 try {
                     const response = await ajax.call([{
@@ -510,6 +513,7 @@ define([
                         block.setData('used', true);
                         block.setTint(0x8a5a2b);
                         self.physics.resume();
+                        self.anims.resumeAll();
                         modal.hide();
                         modal.destroy();
                         self.isModalOpen = false;
@@ -519,12 +523,14 @@ define([
                     if (!response.hasquestion) {
                         root.on('click', '#pl-close', () => {
                             self.physics.resume();
+                            self.anims.resumeAll();
                             modal.hide();
                             modal.destroy();
                             self.isModalOpen = false;
                         });
                         root.on('modal:hidden', () => {
                             self.physics.resume();
+                            self.anims.resumeAll();
                             self.isModalOpen = false;
                         });
                         return;
@@ -573,12 +579,14 @@ define([
                     root.on('modal:hidden', () => {
                         if (self.isModalOpen) {
                             self.physics.resume();
+                            self.anims.resumeAll();
                             self.isModalOpen = false;
                         }
                     });
 
                 } catch (err) {
                     this.physics.resume();
+                    this.anims.resumeAll();
                     this.isModalOpen = false;
                     Notification.exception(err);
                 }
