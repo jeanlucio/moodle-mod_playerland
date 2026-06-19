@@ -42,51 +42,27 @@ define([
             }
 
             create() {
-                // Parallax Backgrounds
-                const mapWidth = 58 * 16;
-                const mapHeight = 25 * 16;
-
-                this.bgBack = this.add.tileSprite(0, 0, mapWidth, 240, 'bg-back').setOrigin(0, 0).setScrollFactor(0);
-                // Scale the back background to fit height if needed, but 240 is default
-                this.bgBack.setScale(mapHeight / 240);
-
-                this.bgMiddle = this.add.tileSprite(0, 0, mapWidth, 240, 'bg-middle').setOrigin(0, 0).setScrollFactor(0.3);
-                this.bgMiddle.setScale(mapHeight / 240);
-
-                // Tilemap
+                // Tilemap — created first so the backgrounds can be sized to the real map.
                 const map = this.make.tilemap({key: 'map'});
                 const tileset = map.addTilesetImage('tileset', 'tileset');
                 const layer = map.createLayer('Tile Layer 1', tileset, 0, 0);
 
-                // Solid tile IDs for THIS map (assets/maps/map.json), which differs from the
-                // original Sunny Land demo. The demo's list was missing this map's main ground
-                // tiles (79, 181, 183) — the most-used tile is 79 (the floor), so the player was
-                // falling straight through it. Flipped floor tiles share index 79 once Phaser
-                // strips the flip bits, so listing 79 covers them too.
-                const solidTiles = [
-                    79, 181, 183,
-                    27, 29, 31, 33, 35, 37,
-                    77, 81, 86, 87,
-                    127, 129, 131, 133, 134, 135,
-                    83, 84,
-                    502, 504, 505, 529, 530,
-                    333, 335, 337, 339,
-                    366, 368,
-                    262,
-                    191, 193, 195,
-                    241, 245,
-                    291, 293, 295
-                ];
-                layer.setCollision(solidTiles);
+                // Parallax backgrounds, stretched to the actual map size.
+                this.bgBack = this.add.tileSprite(0, 0, map.widthInPixels, 240, 'bg-back')
+                    .setOrigin(0, 0).setScrollFactor(0);
+                this.bgBack.setScale(map.heightInPixels / 240);
 
-                // One-way platforms (from original demo lines 227-236).
-                // These tiles only collide on top so the player can jump through from below.
-                const oneWayTiles = [35, 36, 84, 86, 134, 135, 366, 367, 368, 262];
-                layer.forEachTile(tile => {
-                    if (oneWayTiles.includes(tile.index)) {
-                        tile.setCollision(false, false, true, false);
-                    }
-                });
+                this.bgMiddle = this.add.tileSprite(0, 0, map.widthInPixels, 240, 'bg-middle')
+                    .setOrigin(0, 0).setScrollFactor(0.3);
+                this.bgMiddle.setScale(map.heightInPixels / 240);
+
+                // Keep backgrounds behind the tilemap layer.
+                this.bgBack.setDepth(-2);
+                this.bgMiddle.setDepth(-1);
+
+                // Collision now travels with the map: any tile flagged collides=true in Tiled is
+                // solid. No more hardcoded index lists — add the property in Tiled and it just works.
+                layer.setCollisionByProperty({collides: true});
 
                 // Temporary collision debug overlay. Cyan is used (not orange) because the
                 // tileset is brown/orange and the default orange overlay is invisible on it.
@@ -97,10 +73,10 @@ define([
                     faceColor: new Phaser.Display.Color(255, 0, 255, 255)
                 });
 
-                // Player — spawn at tile(54, 9) as per the original demo: createPlayer(54, 9)
-                // In pixel coords: 54*16 = 864, 9*16 = 144. Stored so the player can respawn here.
-                this.spawnX = 864;
-                this.spawnY = 144;
+                // Player spawn near the left of the starter map, above the floor (tile ~2, 8).
+                // Stored so the player can respawn here.
+                this.spawnX = 2 * 16;
+                this.spawnY = 8 * 16;
                 this.player = this.physics.add.sprite(this.spawnX, this.spawnY, 'atlas', 'player/idle/player-idle-1');
 
                 // Match the original demo's player body: body.setSize(12, 16, 8, 16)
@@ -140,14 +116,11 @@ define([
                 // Question Blocks
                 this.questionBlocks = this.physics.add.staticGroup();
 
-                // Place question blocks at meaningful positions on the map
+                // Question blocks placed above reachable platforms on the starter map.
                 const blockPositions = [
-                    {x: 30 * 16, y: 5 * 16},
-                    {x: 44 * 16, y: 12 * 16},
-                    {x: 23 * 16, y: 17 * 16},
-                    {x: 88 * 16, y: 5 * 16},
-                    {x: 102 * 16, y: 12 * 16},
-                    {x: 81 * 16, y: 17 * 16}
+                    {x: 8 * 16, y: 7 * 16},
+                    {x: 16 * 16, y: 4 * 16},
+                    {x: 24 * 16, y: 7 * 16}
                 ];
 
                 blockPositions.forEach(pos => {
