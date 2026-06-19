@@ -42,6 +42,8 @@ define([
                 this.isModalOpen = false;
                 this.score = 0;
                 this.levelComplete = false;
+                this.invulnerableUntil = 0;
+                this.isDying = false;
             }
 
             create() {
@@ -49,6 +51,7 @@ define([
                 const map = this.make.tilemap({key: 'map'});
                 const tileset = map.addTilesetImage('tileset', 'tileset');
                 const layer = map.createLayer('Tile Layer 1', tileset, 0, 0);
+                this.layer = layer; // Stored for enemy edge detection in update().
 
                 // Parallax backgrounds, stretched to the actual map size.
                 this.bgBack = this.add.tileSprite(0, 0, map.widthInPixels, 240, 'bg-back')
@@ -116,9 +119,11 @@ define([
                 // Groups populated from the "Objetos" layer below.
                 this.questionBlocks = this.physics.add.staticGroup();
                 this.collectibles = this.physics.add.group({allowGravity: false});
+                this.enemies = this.physics.add.group();
 
-                // Read the "Objetos" layer from Tiled: cherries, gems, question blocks and exit.
-                // The level designer places markers in Tiled; the behaviour lives here in code.
+                // Read the "Objetos" layer from Tiled: cherries, gems, question blocks, enemies
+                // and the exit. The level designer places markers in Tiled; the behaviour lives
+                // here in code.
                 const objects = map.getObjectLayer('Objetos');
                 if (objects) {
                     objects.objects.forEach(obj => {
@@ -131,6 +136,8 @@ define([
                             const block = this.questionBlocks.create(obj.x, obj.y, 'question_block');
                             block.setScale(0.5);
                             block.refreshBody();
+                        } else if (kind === 'opossum') {
+                            this.spawnEnemy(obj.x, obj.y);
                         } else if (kind === 'exit') {
                             // Flag stands on the floor: anchor its bottom to the marker point.
                             this.exit = this.physics.add.staticImage(obj.x, obj.y, 'exit_flag');
@@ -140,7 +147,12 @@ define([
                 }
 
                 this.physics.add.collider(this.player, this.questionBlocks, this.hitQuestionBlock, null, this);
+                this.physics.add.collider(this.enemies, layer);
                 this.physics.add.overlap(this.player, this.collectibles, this.collectItem, null, this);
+                this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
+
+                // Brief grace period at the start so a nearby enemy cannot kill the idle player.
+                this.invulnerableUntil = this.time.now + 1500;
                 if (this.exit) {
                     this.physics.add.overlap(this.player, this.exit, this.reachExit, null, this);
                 }
@@ -213,11 +225,18 @@ define([
                     return;
                 }
 
+                // During the hurt animation the player is not controllable.
+                if (this.isDying) {
+                    return;
+                }
+
                 // Respawn on manual key press or after falling past the death line.
                 if (Phaser.Input.Keyboard.JustDown(this.respawnKey) || this.player.y > this.deathY) {
                     this.respawn();
                     return;
                 }
+
+                this.updateEnemies();
 
                 const cursors = this.cursors;
                 const wasd = this.wasd;
@@ -264,6 +283,15 @@ define([
                 this.player.setVelocity(0, 0);
                 this.player.setPosition(this.spawnX, this.spawnY);
                 this.player.anims.play('player-idle', true);
+                // Brief invulnerability + blink so the player is not instantly hit again.
+                this.invulnerableUntil = this.time.now + 1500;
+                this.player.setAlpha(0.5);
+                this.tweens.add({
+                    targets: this.player,
+                    alpha: 1,
+                    duration: 1500,
+                    onComplete: () => this.player.setAlpha(1)
+                });
             }
 
             /**
@@ -315,6 +343,107 @@ define([
                 ).setOrigin(0.5).setDepth(20);
             }
 
+            /**
+             * Creates a patrolling opossum enemy at the given position.
+             *
+             * @param {number} x World x of the spawn marker.
+             * @param {number} y World y of the spawn marker.
+             */
+            spawnEnemy(x, y) {
+                const enemy = this.enemies.create(x, y, 'atlas', 'opossum/opossum-1');
+                enemy.setData('alive', true);
+                enemy.setData('speed', 50);
+                enemy.setCollideWorldBounds(true);
+                enemy.setVelocityX(-enemy.getData('speed'));
+                enemy.anims.play('opossum-walk', true);
+            }
+
+            /**
+             * Moves the enemies and turns them around at walls and platform edges.
+             */
+            updateEnemies() {
+                this.enemies.getChildren().forEach(enemy => {
+                    if (!enemy.getData('alive')) {
+                        return;
+                    }
+                    const speed = enemy.getData('speed');
+                    let dir = enemy.body.velocity.x < 0 ? -1 : 1;
+
+                    if (enemy.body.blocked.left) {
+                        dir = 1;
+                    } else if (enemy.body.blocked.right) {
+                        dir = -1;
+                    } else {
+                        // Turn back if there is no ground ahead (platform/pit edge).
+                        const aheadX = enemy.x + dir * (enemy.body.halfWidth + 2);
+                        const belowY = enemy.body.bottom + 2;
+                        if (!this.layer.getTileAtWorldXY(aheadX, belowY)) {
+                            dir = -dir;
+                        }
+                    }
+
+                    enemy.setVelocityX(dir * speed);
+                    enemy.setFlipX(dir > 0);
+                });
+            }
+
+            /**
+             * Resolves a player/enemy overlap: stomp from above kills the enemy, a side touch
+             * sends the player back to the spawn point.
+             *
+             * @param {Phaser.GameObjects.Sprite} player The player sprite.
+             * @param {Phaser.GameObjects.Sprite} enemy The enemy sprite.
+             */
+            hitEnemy(player, enemy) {
+                if (!enemy.getData('alive') || this.levelComplete || this.time.now < this.invulnerableUntil) {
+                    return;
+                }
+                const stomped = player.body.velocity.y > 0 && player.body.bottom <= enemy.body.top + 10;
+                if (stomped) {
+                    this.killEnemy(enemy);
+                    player.setVelocityY(-220); // Bounce off the enemy.
+                } else {
+                    this.playerHurt(enemy);
+                }
+            }
+
+            /**
+             * Plays a short hurt reaction (knockback + animation + pause) before respawning.
+             *
+             * @param {Phaser.GameObjects.Sprite} enemy The enemy that hit the player.
+             */
+            playerHurt(enemy) {
+                if (this.isDying) {
+                    return;
+                }
+                this.isDying = true;
+
+                // Knock the player up and away from the enemy.
+                const dir = this.player.x < enemy.x ? -1 : 1;
+                this.player.setVelocity(dir * 120, -200);
+                this.player.setTint(0xff6666);
+                this.player.anims.play('player-hurt', true);
+
+                this.time.delayedCall(800, () => {
+                    this.player.clearTint();
+                    this.respawn();
+                    this.isDying = false;
+                });
+            }
+
+            /**
+             * Kills an enemy: stops it, plays the death animation and removes it.
+             *
+             * @param {Phaser.GameObjects.Sprite} enemy The enemy sprite.
+             */
+            killEnemy(enemy) {
+                enemy.setData('alive', false);
+                enemy.setVelocity(0, 0);
+                enemy.body.enable = false;
+                enemy.anims.play('enemy-death');
+                enemy.once('animationcomplete', () => enemy.destroy());
+            }
+
             async hitQuestionBlock(player, block) {
                 // Only trigger when hit from below (the player is blocked upward against the
                 // static block) and only once per block.
@@ -326,6 +455,10 @@ define([
                 }
                 this.isModalOpen = true;
                 player.setVelocityY(50); // Small bounce down.
+                this.physics.pause(); // Freeze the player and enemies while the question is open.
+
+                // Bump the block the instant it is hit (before the modal opens).
+                this.celebrateBlock(block);
 
                 const self = this;
                 const strings = await str.get_strings([
@@ -336,6 +469,9 @@ define([
                     {key: 'continue', component: 'core'}
                 ]);
                 const [strQuestion, strNoQuestions, strCorrect, strIncorrect, strContinue] = strings;
+
+                // Let the bump play before the modal covers the block.
+                await new Promise(resolve => self.time.delayedCall(260, resolve));
 
                 try {
                     const response = await ajax.call([{
@@ -366,11 +502,14 @@ define([
                     });
                     modal.show();
                     const root = modal.getRoot();
+                    // Vertically centre the dialog so it sits over the game, not at the top.
+                    root.find('.modal-dialog').addClass('modal-dialog-centered');
 
                     // Spend the block (stays on the map, turns brown) and close the modal.
                     const finish = () => {
                         block.setData('used', true);
                         block.setTint(0x8a5a2b);
+                        self.physics.resume();
                         modal.hide();
                         modal.destroy();
                         self.isModalOpen = false;
@@ -379,11 +518,13 @@ define([
                     // No questions configured: close without spending the block.
                     if (!response.hasquestion) {
                         root.on('click', '#pl-close', () => {
+                            self.physics.resume();
                             modal.hide();
                             modal.destroy();
                             self.isModalOpen = false;
                         });
                         root.on('modal:hidden', () => {
+                            self.physics.resume();
                             self.isModalOpen = false;
                         });
                         return;
@@ -408,7 +549,6 @@ define([
                         if (checkResult.correct) {
                             chosen.removeClass('btn-outline-primary').addClass('btn-success text-white');
                             feedbackHtml = '<div class="alert alert-success mb-0">' + strCorrect + '</div>';
-                            self.celebrateBlock(block);
                             ajax.call([{
                                 methodname: 'mod_playerland_save_progress',
                                 args: {playerlandid: self.gameConfig.id, blocksresolved: 1}
@@ -432,11 +572,13 @@ define([
                     root.on('click', '#pl-continue', finish);
                     root.on('modal:hidden', () => {
                         if (self.isModalOpen) {
+                            self.physics.resume();
                             self.isModalOpen = false;
                         }
                     });
 
                 } catch (err) {
+                    this.physics.resume();
                     this.isModalOpen = false;
                     Notification.exception(err);
                 }

@@ -56,9 +56,10 @@ define([], function() {
                 loadingText.destroy();
             });
 
-            // Load Tilemap
+            // Load Tilemap. The map JSON is a static asset the browser caches aggressively;
+            // a cache-buster guarantees level edits show up without a hard refresh.
             this.load.image('tileset', assetsUrl + '/environment/tileset.png');
-            this.load.tilemapTiledJSON('map', assetsUrl + '/maps/map.json');
+            this.load.tilemapTiledJSON('map', assetsUrl + '/maps/map.json?cb=' + Date.now());
 
             // Load Backgrounds
             this.load.image('bg-back', assetsUrl + '/environment/back.png');
@@ -137,6 +138,21 @@ define([], function() {
             this.anims.create({
                 key: 'item-feedback',
                 frames: this.anims.generateFrameNames('atlas', {prefix: 'item-feedback/item-feedback-', start: 1, end: 4}),
+                frameRate: 12,
+                repeat: 0
+            });
+
+            // Enemy animations.
+            this.anims.create({
+                key: 'opossum-walk',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'opossum/opossum-', start: 1, end: 6}),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'enemy-death',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'enemy-death/enemy-death-', start: 1, end: 6}),
                 frameRate: 12,
                 repeat: 0
             });

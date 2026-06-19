@@ -11,7 +11,7 @@
  "tilewidth": 16,
  "tileheight": 16,
  "nextlayerid": 3,
- "nextobjectid": 13,
+ "nextobjectid": 15,
  "layers": [
   {
    "id": 1,
@@ -930,6 +930,30 @@
     },
     {
      "id": 12,
+     "name": "opossum",
+     "type": "opossum",
+     "x": 168,
+     "y": 248,
+     "point": true,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true
+    },
+    {
+     "id": 13,
+     "name": "opossum",
+     "type": "opossum",
+     "x": 584,
+     "y": 248,
+     "point": true,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true
+    },
+    {
+     "id": 14,
      "name": "exit",
      "type": "exit",
      "x": 616,
