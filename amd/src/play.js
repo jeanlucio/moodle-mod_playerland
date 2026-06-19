@@ -177,6 +177,27 @@ define([
                 }
             }
 
+            /**
+             * Plays a celebratory bump and sparkle on a question block when answered correctly.
+             *
+             * @param {Phaser.GameObjects.Sprite} block The question block.
+             */
+            celebrateBlock(block) {
+                const restY = block.y;
+                this.tweens.add({
+                    targets: block,
+                    y: restY - 8,
+                    duration: 110,
+                    yoyo: true,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => block.setY(restY)
+                });
+
+                const sparkle = this.add.sprite(block.x, restY - 12, 'atlas').setDepth(10);
+                sparkle.anims.play('item-feedback');
+                sparkle.once('animationcomplete', () => sparkle.destroy());
+            }
+
             update() {
                 // Level finished: wait for ENTER to restart, ignore all other input.
                 if (this.levelComplete) {
@@ -387,6 +408,7 @@ define([
                         if (checkResult.correct) {
                             chosen.removeClass('btn-outline-primary').addClass('btn-success text-white');
                             feedbackHtml = '<div class="alert alert-success mb-0">' + strCorrect + '</div>';
+                            self.celebrateBlock(block);
                             ajax.call([{
                                 methodname: 'mod_playerland_save_progress',
                                 args: {playerlandid: self.gameConfig.id, blocksresolved: 1}

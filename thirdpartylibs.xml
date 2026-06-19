@@ -4,7 +4,7 @@
     <location>javascript/phaser.min.js</location>
     <name>Phaser</name>
     <license>MIT</license>
-    <version>3.90.0</version>
+    <version>4.1.0</version>
     <licenseversion></licenseversion>
   </library>
 </libraries>
