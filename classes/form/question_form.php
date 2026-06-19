@@ -38,8 +38,8 @@ class question_form extends \moodleform {
     protected function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id', 0);
-        $mform->setType('id', PARAM_INT);
+        $mform->addElement('hidden', 'qid', 0);
+        $mform->setType('qid', PARAM_INT);
 
         $mform->addElement('hidden', 'cmid', 0);
         $mform->setType('cmid', PARAM_INT);

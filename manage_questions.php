@@ -63,8 +63,8 @@ if ($mform->is_cancelled()) {
     $qrecord->questiontext = $data->questiontext['text'];
     $qrecord->questionformat = $data->questiontext['format'];
 
-    if (!empty($data->id)) {
-        $qrecord->id = $data->id;
+    if (!empty($data->qid)) {
+        $qrecord->id = $data->qid;
         $DB->update_record('playerland_q', $qrecord);
         $qid = $qrecord->id;
     } else {
@@ -112,7 +112,7 @@ if ($action === 'add' || $action === 'edit') {
         $options = $DB->get_records('playerland_opts', ['questionid' => $questionid], 'id ASC');
         
         $formdata = new stdClass();
-        $formdata->id = $question->id;
+        $formdata->qid = $question->id;
         $formdata->cmid = $cm->id;
         $formdata->questiontext = [
             'text' => $question->questiontext,
