@@ -1,0 +1,5 @@
+# Ignorar a pasta de build gerada
+amd/build/*
+# Ignorar bibliotecas de terceiros minificadas
+**/*.min.js
+**/phaser.min.js
