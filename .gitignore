@@ -1,1 +1,19 @@
-.docs/
+# OS-generated files.
+.DS_Store
+Thumbs.db
+
+# Editor/IDE-specific settings and workspace files.
+.vscode/
+.idea/
+
+# Local ESLint configs are intentionally excluded from version control. This
+# plugin is linted through the shared Moodle core config, run via
+# moodle-plugin-ci's Grunt task in CI. A local config here would silently
+# override it and hide lint failures that only show up in CI.
+.eslintrc
+.eslintrc.json
+.eslintignore
+
+# AI assistant session/workspace directories, not part of the plugin.
+.claude
+.plans
