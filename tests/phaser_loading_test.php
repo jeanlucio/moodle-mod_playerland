@@ -30,7 +30,7 @@ namespace mod_playerland;
  * in the page footer and can race core_message/message_drawer.js, which expects its own
  * drawer markup (rendered further down the same footer) to already be in the DOM by the
  * time its require() callback runs — confirmed live against mod_playerpuzzle, which has
- * the identical Phaser-loading pattern (see its SCOPE.md §17). The bug itself is a
+ * the identical Phaser-loading pattern. The bug itself is a
  * client-side timing race, not something reproducible deterministically in PHPUnit or
  * reliably in Behat, so the only defensible automated guard is the structural invariant
  * that prevents it: view.php must never queue phaser.min.js as a static <script>, and
