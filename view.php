@@ -105,10 +105,9 @@ echo \html_writer::tag(
     ['type' => 'application/json', 'id' => 'mod-playerland-config']
 );
 
-// Phaser must be loaded globally before the AMD module initialises.
-$PAGE->requires->js(
-    new moodle_url('/mod/playerland/javascript/phaser.min.js')
-);
+// Phaser itself is loaded dynamically from inside game.js (mirrors
+// filter_mathjaxloader's loadMathJax()), not queued here as a static <script> — a static
+// tag would sit in the page's footer and race core_message/message_drawer.js.
 $PAGE->requires->js_call_amd('mod_playerland/game', 'init');
 
 echo $OUTPUT->footer();

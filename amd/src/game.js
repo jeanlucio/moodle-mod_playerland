@@ -29,6 +29,28 @@ define([
 ], function(BootScene, PlayScene) {
     'use strict';
 
+    let phaserLoadPromise = null;
+
+    // Loads Phaser as a dynamically-injected <script>, resolved via its onload event, instead
+    // of a static <script> tag queued through $PAGE->requires->js(). A static tag there would
+    // sit in the page's footer output and race core_message/message_drawer.js, which expects
+    // its own drawer markup (rendered further down the same footer) to already be in the DOM
+    // by the time its own require() callback runs — same pattern as filter_mathjaxloader's
+    // loadMathJax() (filter/mathjaxloader/amd/src/loader.js).
+    const loadPhaser = (url) => {
+        if (!phaserLoadPromise) {
+            phaserLoadPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.onload = resolve;
+                script.onerror = reject;
+                script.src = url;
+                document.getElementsByTagName('head')[0].appendChild(script);
+            });
+        }
+        return phaserLoadPromise;
+    };
+
     /**
      * Starts the Phaser game engine.
      *
@@ -69,11 +91,19 @@ define([
         /**
          * Module entry point called by Moodle AMD loader.
          */
-        init() {
+        async init() {
             const configEl = document.getElementById('mod-playerland-config');
             const config = configEl ? JSON.parse(configEl.textContent) : {};
 
-            // Phaser is loaded globally via $PAGE->requires->js().
+            try {
+                await loadPhaser(`${M.cfg.wwwroot}/mod/playerland/javascript/phaser.min.js`);
+            } catch (err) {
+                window.console.error('[PlayerLand] Phaser load error:', err);
+                return;
+            }
+
+            // Phaser's UMD bundle self-registers as the AMD module "Phaser" the moment it
+            // executes (checked above via its own onload), so this resolves immediately.
             require(['Phaser'], function(PhaserObj) {
                 if (PhaserObj) {
                     window.Phaser = PhaserObj;
