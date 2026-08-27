@@ -32,8 +32,10 @@ require_once($CFG->dirroot . '/course/moodleform_mod.php');
 class mod_playerland_mod_form extends moodleform_mod {
     /**
      * Defines the form.
+     *
+     * @return void
      */
-    public function definition() {
+    public function definition(): void {
         $mform = $this->_form;
 
         // General settings.
@@ -47,14 +49,42 @@ class mod_playerland_mod_form extends moodleform_mod {
         $this->standard_intro_elements();
 
         // Game settings.
-        $mform->addElement('header', 'gamesettings', get_string('settings'));
+        $mform->addElement('header', 'gamesettings', get_string('gamesettings', 'mod_playerland'));
 
-        $mform->addElement('text', 'levels', 'Number of levels', ['size' => '4']);
+        $mform->addElement('text', 'levels', get_string('levels', 'mod_playerland'), ['size' => '4']);
         $mform->setType('levels', PARAM_INT);
         $mform->setDefault('levels', 1);
+        $mform->addRule('levels', get_string('err_positiveint', 'mod_playerland'), 'numeric', null, 'client');
+
+        $mform->addElement('text', 'targetquestions', get_string('targetquestions', 'mod_playerland'), ['size' => '4']);
+        $mform->setType('targetquestions', PARAM_INT);
+        $mform->setDefault('targetquestions', 3);
+        $mform->addHelpButton('targetquestions', 'targetquestions', 'mod_playerland');
+        $mform->addRule('targetquestions', get_string('err_positiveint', 'mod_playerland'), 'numeric', null, 'client');
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
+    }
+
+    /**
+     * Validates the submitted form data.
+     *
+     * @param array $data Submitted data.
+     * @param array $files Submitted files.
+     * @return array Validation errors keyed by element name.
+     */
+    public function validation($data, $files): array {
+        $errors = parent::validation($data, $files);
+
+        if ((int)($data['levels'] ?? 0) < 1) {
+            $errors['levels'] = get_string('err_positiveint', 'mod_playerland');
+        }
+
+        if ((int)($data['targetquestions'] ?? 0) < 1) {
+            $errors['targetquestions'] = get_string('err_positiveint', 'mod_playerland');
+        }
+
+        return $errors;
     }
 }

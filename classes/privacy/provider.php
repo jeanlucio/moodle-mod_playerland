@@ -35,8 +35,7 @@ use core_privacy\local\request\writer;
 /**
  * Privacy provider for mod_playerland.
  *
- * Personal data is stored in playerland_atmpt (userid, currentlevel,
- * blocksresolved, timecreated, timemodified).
+ * Personal data is stored in playerland_atmpt and playerland_ans.
  *
  * @package    mod_playerland
  * @copyright  2026 Jean Lúcio
@@ -61,6 +60,12 @@ class provider implements
             'timemodified'   => 'privacy:metadata:timemodified',
         ], 'privacy:metadata:playerland_atmpt');
 
+        $collection->add_database_table('playerland_ans', [
+            'userid'      => 'privacy:metadata:userid',
+            'questionid'  => 'privacy:metadata:questionid',
+            'timecreated' => 'privacy:metadata:timecreated',
+        ], 'privacy:metadata:playerland_ans');
+
         return $collection;
     }
 
@@ -75,6 +80,19 @@ class provider implements
 
         $sql = "SELECT ctx.id
                   FROM {playerland_atmpt} pa
+                  JOIN {playerland} pl ON pl.id = pa.playerlandid
+                  JOIN {modules} m ON m.name = :activityname
+                  JOIN {course_modules} cm ON cm.instance = pl.id AND cm.module = m.id
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :modlevel
+                 WHERE pa.userid = :userid";
+        $contextlist->add_from_sql($sql, [
+            'activityname' => 'playerland',
+            'modlevel'     => CONTEXT_MODULE,
+            'userid'       => $userid,
+        ]);
+
+        $sql = "SELECT ctx.id
+                  FROM {playerland_ans} pa
                   JOIN {playerland} pl ON pl.id = pa.playerlandid
                   JOIN {modules} m ON m.name = :activityname
                   JOIN {course_modules} cm ON cm.instance = pl.id AND cm.module = m.id
@@ -103,6 +121,19 @@ class provider implements
 
         $sql = "SELECT pa.userid
                   FROM {playerland_atmpt} pa
+                  JOIN {playerland} pl ON pl.id = pa.playerlandid
+                  JOIN {modules} m ON m.name = :activityname
+                  JOIN {course_modules} cm ON cm.instance = pl.id AND cm.module = m.id
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :modlevel
+                 WHERE ctx.id = :contextid";
+        $userlist->add_from_sql('userid', $sql, [
+            'activityname' => 'playerland',
+            'modlevel'     => CONTEXT_MODULE,
+            'contextid'    => $context->id,
+        ]);
+
+        $sql = "SELECT pa.userid
+                  FROM {playerland_ans} pa
                   JOIN {playerland} pl ON pl.id = pa.playerlandid
                   JOIN {modules} m ON m.name = :activityname
                   JOIN {course_modules} cm ON cm.instance = pl.id AND cm.module = m.id
@@ -166,6 +197,32 @@ class provider implements
                 (object) ['attempts' => $attempts]
             );
         }
+
+        $sql = "SELECT pa.id, pa.questionid, pa.timecreated, ctx.id AS contextid
+                  FROM {playerland_ans} pa
+                  JOIN {playerland} pl ON pl.id = pa.playerlandid
+                  JOIN {modules} m ON m.name = 'playerland'
+                  JOIN {course_modules} cm ON cm.instance = pl.id AND cm.module = m.id
+                  JOIN {context} ctx ON ctx.instanceid = cm.id
+                 WHERE ctx.id $insql
+                   AND pa.userid = :userid";
+        $records = $DB->get_recordset_sql($sql, array_merge($inparams, ['userid' => $userid]));
+
+        $allanswers = [];
+        foreach ($records as $record) {
+            $allanswers[$record->contextid][] = (object) [
+                'questionid' => $record->questionid,
+                'timecreated' => transform::datetime($record->timecreated),
+            ];
+        }
+        $records->close();
+
+        foreach ($allanswers as $contextid => $answers) {
+            writer::with_context($contexts[$contextid])->export_data(
+                [get_string('privacy:metadata:playerland_ans', 'mod_playerland')],
+                (object) ['answers' => $answers]
+            );
+        }
     }
 
     /**
@@ -186,6 +243,7 @@ class provider implements
         }
 
         $DB->delete_records('playerland_atmpt', ['playerlandid' => $cm->instance]);
+        $DB->delete_records('playerland_ans', ['playerlandid' => $cm->instance]);
     }
 
     /**
@@ -219,6 +277,11 @@ class provider implements
             "playerlandid $insql AND userid = :userid",
             array_merge($inparams, ['userid' => $userid])
         );
+        $DB->delete_records_select(
+            'playerland_ans',
+            "playerlandid $insql AND userid = :userid",
+            array_merge($inparams, ['userid' => $userid])
+        );
     }
 
     /**
@@ -248,6 +311,11 @@ class provider implements
         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'uid');
         $DB->delete_records_select(
             'playerland_atmpt',
+            "playerlandid = :playerlandid AND userid $insql",
+            array_merge(['playerlandid' => $cm->instance], $inparams)
+        );
+        $DB->delete_records_select(
+            'playerland_ans',
             "playerlandid = :playerlandid AND userid $insql",
             array_merge(['playerlandid' => $cm->instance], $inparams)
         );

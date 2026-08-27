@@ -29,17 +29,110 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use stdClass;
 
 /**
  * External functions for playerland.
  */
 class external extends external_api {
     /**
+     * Loads an activity instance and validates the current request context.
+     *
+     * @param int $playerlandid The playerland instance id.
+     * @return array The course module, context and activity instance.
+     */
+    private static function get_validated_instance(int $playerlandid): array {
+        global $DB;
+
+        $cm = get_coursemodule_from_instance('playerland', $playerlandid, 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+        self::validate_context($context);
+        require_capability('mod/playerland:view', $context);
+
+        $playerland = $DB->get_record('playerland', ['id' => $playerlandid], '*', MUST_EXIST);
+
+        return [$cm, $context, $playerland];
+    }
+
+    /**
+     * Gets or creates the current user's attempt row.
+     *
+     * @param int $playerlandid The playerland instance id.
+     * @param int $userid The user id.
+     * @return stdClass The attempt record.
+     */
+    private static function get_or_create_attempt(int $playerlandid, int $userid): stdClass {
+        global $DB;
+
+        $attempt = $DB->get_record('playerland_atmpt', [
+            'playerlandid' => $playerlandid,
+            'userid' => $userid,
+        ]);
+
+        if ($attempt) {
+            return $attempt;
+        }
+
+        $attempt = new stdClass();
+        $attempt->playerlandid = $playerlandid;
+        $attempt->userid = $userid;
+        $attempt->currentlevel = 1;
+        $attempt->blocksresolved = 0;
+        $attempt->timecreated = time();
+        $attempt->timemodified = $attempt->timecreated;
+        $attempt->id = $DB->insert_record('playerland_atmpt', $attempt);
+
+        return $attempt;
+    }
+
+    /**
+     * Recounts and stores the current user's distinct correct answer progress.
+     *
+     * @param stdClass $playerland The activity instance.
+     * @param int $userid The user id.
+     * @return stdClass The updated attempt.
+     */
+    private static function refresh_attempt_progress(stdClass $playerland, int $userid): stdClass {
+        global $CFG, $DB;
+
+        $attempt = self::get_or_create_attempt((int)$playerland->id, $userid);
+        $attempt->blocksresolved = $DB->count_records('playerland_ans', [
+            'playerlandid' => $playerland->id,
+            'userid' => $userid,
+        ]);
+        $attempt->timemodified = time();
+        $DB->update_record('playerland_atmpt', $attempt);
+
+        require_once($CFG->dirroot . '/mod/playerland/lib.php');
+        playerland_update_grades($playerland, $userid);
+
+        return $attempt;
+    }
+
+    /**
+     * Converts attempt progress to an external response fragment.
+     *
+     * @param stdClass $playerland The activity instance.
+     * @param stdClass $attempt The attempt record.
+     * @return array Progress values.
+     */
+    private static function get_progress_response(stdClass $playerland, stdClass $attempt): array {
+        $targetquestions = max(1, (int)($playerland->targetquestions ?? 1));
+        $blocksresolved = (int)$attempt->blocksresolved;
+
+        return [
+            'blocksresolved' => $blocksresolved,
+            'targetquestions' => $targetquestions,
+            'complete' => $blocksresolved >= $targetquestions,
+        ];
+    }
+
+    /**
      * Parameters for save_progress.
      *
      * @return external_function_parameters
      */
-    public static function save_progress_parameters() {
+    public static function save_progress_parameters(): external_function_parameters {
         return new external_function_parameters([
             'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
             'blocksresolved' => new external_value(PARAM_INT, 'Number of blocks resolved'),
@@ -53,37 +146,18 @@ class external extends external_api {
      * @param int $blocksresolved
      * @return array
      */
-    public static function save_progress($playerlandid, $blocksresolved) {
-        global $DB, $USER;
+    public static function save_progress(int $playerlandid, int $blocksresolved): array {
+        global $USER;
 
         $params = self::validate_parameters(self::save_progress_parameters(), [
             'playerlandid' => $playerlandid,
             'blocksresolved' => $blocksresolved,
         ]);
 
-        $cm = get_coursemodule_from_instance('playerland', $params['playerlandid'], 0, false, MUST_EXIST);
-        $context = \context_module::instance($cm->id);
-        self::validate_context($context);
-        require_capability('mod/playerland:view', $context);
+        [, , $playerland] = self::get_validated_instance((int)$params['playerlandid']);
+        $attempt = self::refresh_attempt_progress($playerland, $USER->id);
 
-        $attempt = $DB->get_record('playerland_atmpt', ['playerlandid' => $params['playerlandid'], 'userid' => $USER->id]);
-
-        if ($attempt) {
-            $attempt->blocksresolved = $params['blocksresolved'];
-            $attempt->timemodified = time();
-            $DB->update_record('playerland_atmpt', $attempt);
-        } else {
-            $attempt = new \stdClass();
-            $attempt->playerlandid = $params['playerlandid'];
-            $attempt->userid = $USER->id;
-            $attempt->currentlevel = 1;
-            $attempt->blocksresolved = $params['blocksresolved'];
-            $attempt->timecreated = time();
-            $attempt->timemodified = time();
-            $DB->insert_record('playerland_atmpt', $attempt);
-        }
-
-        return ['status' => true];
+        return ['status' => true] + self::get_progress_response($playerland, $attempt);
     }
 
     /**
@@ -91,9 +165,12 @@ class external extends external_api {
      *
      * @return external_single_structure
      */
-    public static function save_progress_returns() {
+    public static function save_progress_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_BOOL, 'Status of the operation'),
+            'blocksresolved' => new external_value(PARAM_INT, 'Number of distinct correct questions'),
+            'targetquestions' => new external_value(PARAM_INT, 'Required correct questions'),
+            'complete' => new external_value(PARAM_BOOL, 'Whether the required progress has been reached'),
         ]);
     }
 
@@ -102,7 +179,7 @@ class external extends external_api {
      *
      * @return external_function_parameters
      */
-    public static function get_question_parameters() {
+    public static function get_question_parameters(): external_function_parameters {
         return new external_function_parameters([
             'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
         ]);
@@ -114,22 +191,30 @@ class external extends external_api {
      * @param int $playerlandid
      * @return array
      */
-    public static function get_question($playerlandid) {
-        global $DB;
+    public static function get_question(int $playerlandid): array {
+        global $DB, $USER;
 
         $params = self::validate_parameters(self::get_question_parameters(), [
             'playerlandid' => $playerlandid,
         ]);
 
-        $cm = get_coursemodule_from_instance('playerland', $params['playerlandid'], 0, false, MUST_EXIST);
-        $context = \context_module::instance($cm->id);
-        self::validate_context($context);
-        require_capability('mod/playerland:view', $context);
+        [, $context] = self::get_validated_instance((int)$params['playerlandid']);
 
-        // Fetch a random question for this instance.
-        $sql = "SELECT id, questiontext FROM {playerland_q} WHERE playerlandid = ? ORDER BY RANDOM()";
-        // Wait, Moodle DB abstraction doesn't support ORDER BY RANDOM() universally. Let's fetch all and pick one.
-        $questions = $DB->get_records('playerland_q', ['playerlandid' => $params['playerlandid']]);
+        $sql = "SELECT q.id, q.questiontext, q.questionformat
+                  FROM {playerland_q} q
+             LEFT JOIN {playerland_ans} a ON a.questionid = q.id
+                       AND a.playerlandid = q.playerlandid
+                       AND a.userid = :userid
+                 WHERE q.playerlandid = :playerlandid
+                       AND a.id IS NULL";
+        $questions = $DB->get_records_sql($sql, [
+            'userid' => $USER->id,
+            'playerlandid' => $params['playerlandid'],
+        ]);
+
+        if (empty($questions)) {
+            $questions = $DB->get_records('playerland_q', ['playerlandid' => $params['playerlandid']]);
+        }
 
         if (empty($questions)) {
             // No questions configured yet.
@@ -169,7 +254,7 @@ class external extends external_api {
      *
      * @return external_single_structure
      */
-    public static function get_question_returns() {
+    public static function get_question_returns(): external_single_structure {
         return new external_single_structure([
             'hasquestion' => new external_value(PARAM_BOOL, 'Whether a question was found'),
             'questionid' => new external_value(PARAM_INT, 'Question ID'),
@@ -188,7 +273,7 @@ class external extends external_api {
      *
      * @return external_function_parameters
      */
-    public static function check_answer_parameters() {
+    public static function check_answer_parameters(): external_function_parameters {
         return new external_function_parameters([
             'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
             'questionid' => new external_value(PARAM_INT, 'The question id'),
@@ -204,8 +289,8 @@ class external extends external_api {
      * @param int $optionid
      * @return array
      */
-    public static function check_answer($playerlandid, $questionid, $optionid) {
-        global $DB;
+    public static function check_answer(int $playerlandid, int $questionid, int $optionid): array {
+        global $DB, $USER;
 
         $params = self::validate_parameters(self::check_answer_parameters(), [
             'playerlandid' => $playerlandid,
@@ -213,16 +298,38 @@ class external extends external_api {
             'optionid' => $optionid,
         ]);
 
-        $cm = get_coursemodule_from_instance('playerland', $params['playerlandid'], 0, false, MUST_EXIST);
-        $context = \context_module::instance($cm->id);
-        self::validate_context($context);
-        require_capability('mod/playerland:view', $context);
+        [, , $playerland] = self::get_validated_instance((int)$params['playerlandid']);
 
-        $option = $DB->get_record('playerland_opts', ['id' => $params['optionid'], 'questionid' => $params['questionid']]);
+        $question = $DB->get_record('playerland_q', [
+            'id' => $params['questionid'],
+            'playerlandid' => $params['playerlandid'],
+        ]);
+        if (!$question) {
+            throw new \moodle_exception('invalidquestion', 'mod_playerland');
+        }
+
+        $option = $DB->get_record('playerland_opts', [
+            'id' => $params['optionid'],
+            'questionid' => $params['questionid'],
+        ]);
 
         $correct = false;
         if ($option && $option->iscorrect) {
             $correct = true;
+            if (
+                !$DB->record_exists('playerland_ans', [
+                    'playerlandid' => $params['playerlandid'],
+                    'userid' => $USER->id,
+                    'questionid' => $params['questionid'],
+                ])
+            ) {
+                $answer = new stdClass();
+                $answer->playerlandid = $params['playerlandid'];
+                $answer->userid = $USER->id;
+                $answer->questionid = $params['questionid'];
+                $answer->timecreated = time();
+                $DB->insert_record('playerland_ans', $answer);
+            }
         }
 
         // The correct option for this question, so the client can highlight it on a wrong answer.
@@ -233,10 +340,12 @@ class external extends external_api {
             IGNORE_MULTIPLE
         );
 
+        $attempt = self::refresh_attempt_progress($playerland, $USER->id);
+
         return [
             'correct' => $correct,
             'correctoptionid' => $correctoption ? (int) $correctoption->id : 0,
-        ];
+        ] + self::get_progress_response($playerland, $attempt);
     }
 
     /**
@@ -244,10 +353,13 @@ class external extends external_api {
      *
      * @return external_single_structure
      */
-    public static function check_answer_returns() {
+    public static function check_answer_returns(): external_single_structure {
         return new external_single_structure([
             'correct' => new external_value(PARAM_BOOL, 'Whether the answer is correct'),
             'correctoptionid' => new external_value(PARAM_INT, 'The id of the correct option'),
+            'blocksresolved' => new external_value(PARAM_INT, 'Number of distinct correct questions'),
+            'targetquestions' => new external_value(PARAM_INT, 'Required correct questions'),
+            'complete' => new external_value(PARAM_BOOL, 'Whether the required progress has been reached'),
         ]);
     }
 }

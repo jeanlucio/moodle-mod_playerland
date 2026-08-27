@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+require_once($CFG->libdir . '/completionlib.php');
 
 $id = required_param('id', PARAM_INT); // Course module ID.
 
@@ -34,6 +35,9 @@ $playerland = $DB->get_record('playerland', ['id' => $cm->instance], '*', MUST_E
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/playerland:view', $context);
+
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
 
 // Trigger course_module_viewed event.
 $event = \mod_playerland\event\course_module_viewed::create([
@@ -54,7 +58,14 @@ $config = [
     'id' => $playerland->id,
     'assetsurl' => (new moodle_url('/mod/playerland/assets'))->out(false),
     'levels' => $playerland->levels,
+    'targetquestions' => max(1, (int)($playerland->targetquestions ?? 1)),
+    'blocksresolved' => 0,
 ];
+
+$attempt = $DB->get_record('playerland_atmpt', ['playerlandid' => $playerland->id, 'userid' => $USER->id]);
+if ($attempt) {
+    $config['blocksresolved'] = (int)$attempt->blocksresolved;
+}
 
 echo $OUTPUT->header();
 
@@ -63,8 +74,8 @@ echo $OUTPUT->heading(format_string($playerland->name));
 if (has_capability('mod/playerland:manage', $context)) {
     $manageurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cm->id]);
     echo html_writer::div(
-        html_writer::link($manageurl, get_string('managequestions', 'mod_playerland'), ['class' => 'btn btn-secondary mb-3']),
-        'text-right'
+        html_writer::link($manageurl, get_string('managequestions', 'mod_playerland'), ['class' => 'btn btn-secondary']),
+        'mod-playerland-actions'
     );
 }
 
@@ -75,24 +86,6 @@ if (!empty($playerland->intro)) {
         'intro'
     );
 }
-
-// Optional inline styling for the game container.
-echo \html_writer::tag('style', '
-    #playerland-game-wrapper {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-        border: 4px solid #333;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    #playerland-game-container canvas {
-        display: block;
-        width: 100%;
-        height: auto;
-    }
-');
 
 echo \html_writer::start_div('', ['id' => 'playerland-game-wrapper']);
 echo \html_writer::div('', '', ['id' => 'playerland-game-container']);

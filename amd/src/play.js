@@ -42,6 +42,10 @@ define([
                 this.isModalOpen = false;
                 this.score = 0;
                 this.levelComplete = false;
+                this.blocksResolved = Number(data.gameConfig.blocksresolved || 0);
+                this.targetQuestions = Math.max(1, Number(data.gameConfig.targetquestions || 1));
+                this.exitUnlocked = this.blocksResolved >= this.targetQuestions;
+                this.exitNotice = null;
                 this.invulnerableUntil = 0;
                 this.isDying = false;
             }
@@ -167,15 +171,30 @@ define([
                     strokeThickness: 3
                 }).setScrollFactor(0).setDepth(20);
 
+                this.questionsText = this.add.text(6, 22, '', {
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    color: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 3
+                }).setScrollFactor(0).setDepth(20);
+
                 str.get_strings([
                     {key: 'score', component: 'mod_playerland'},
+                    {key: 'questionsprogress', component: 'mod_playerland'},
+                    {key: 'exitlocked', component: 'mod_playerland'},
+                    {key: 'exitunlocked', component: 'mod_playerland'},
                     {key: 'levelcomplete', component: 'mod_playerland'},
                     {key: 'pressenter', component: 'mod_playerland'}
-                ]).then(([strScore, strLevelComplete, strPressEnter]) => {
+                ]).then(([strScore, strQuestionsProgress, strExitLocked, strExitUnlocked, strLevelComplete, strPressEnter]) => {
                     this.strScore = strScore;
+                    this.strQuestionsProgress = strQuestionsProgress;
+                    this.strExitLocked = strExitLocked;
+                    this.strExitUnlocked = strExitUnlocked;
                     this.strLevelComplete = strLevelComplete;
                     this.strPressEnter = strPressEnter;
                     this.updateScore();
+                    this.updateQuestionProgress();
                     return null;
                 }).catch(Notification.exception);
             }
@@ -187,6 +206,65 @@ define([
                 if (this.strScore) {
                     this.scoreText.setText(this.strScore.replace('{$a}', this.score));
                 }
+            }
+
+            /**
+             * Refreshes the question progress HUD.
+             */
+            updateQuestionProgress() {
+                if (!this.strQuestionsProgress) {
+                    return;
+                }
+
+                const progress = this.strQuestionsProgress
+                    .replace('{$a->resolved}', Math.min(this.blocksResolved, this.targetQuestions))
+                    .replace('{$a->target}', this.targetQuestions);
+                this.questionsText.setText(progress);
+            }
+
+            /**
+             * Applies progress returned by the Moodle web service.
+             *
+             * @param {object} result The web service response.
+             */
+            applyProgress(result) {
+                this.blocksResolved = Number(result.blocksresolved || this.blocksResolved);
+                this.targetQuestions = Math.max(1, Number(result.targetquestions || this.targetQuestions));
+                this.exitUnlocked = Boolean(result.complete);
+                this.updateQuestionProgress();
+
+                if (this.exitUnlocked && this.strExitUnlocked) {
+                    this.showExitNotice(this.strExitUnlocked, 0x3d7a2a);
+                }
+            }
+
+            /**
+             * Shows a short world-space notice near the exit flag or the player.
+             *
+             * @param {string} message The message to display.
+             * @param {number} color The Phaser text colour.
+             */
+            showExitNotice(message, color) {
+                if (this.exitNotice) {
+                    this.exitNotice.destroy();
+                }
+
+                const anchor = this.exit || this.player;
+                this.exitNotice = this.add.text(anchor.x, anchor.y - 42, message, {
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    color: '#ffffff',
+                    backgroundColor: Phaser.Display.Color.IntegerToColor(color).rgba,
+                    padding: {x: 6, y: 4},
+                    align: 'center'
+                }).setOrigin(0.5).setDepth(30);
+
+                this.time.delayedCall(1800, () => {
+                    if (this.exitNotice) {
+                        this.exitNotice.destroy();
+                        this.exitNotice = null;
+                    }
+                });
             }
 
             /**
@@ -318,6 +396,17 @@ define([
                 if (this.levelComplete) {
                     return;
                 }
+
+                if (!this.exitUnlocked) {
+                    const remaining = Math.max(0, this.targetQuestions - this.blocksResolved);
+                    const message = this.strExitLocked ? this.strExitLocked.replace('{$a}', remaining) : '';
+                    if (message) {
+                        this.showExitNotice(message, 0x8a5a2b);
+                    }
+                    this.player.setVelocityX(-80);
+                    return;
+                }
+
                 this.levelComplete = true;
                 this.physics.pause();
                 this.player.anims.play('player-idle', true);
@@ -508,10 +597,14 @@ define([
                     // Vertically centre the dialog so it sits over the game, not at the top.
                     root.find('.modal-dialog').addClass('modal-dialog-centered');
 
-                    // Spend the block (stays on the map, turns brown) and close the modal.
+                    let answeredCorrectly = false;
+
+                    // Close the modal and spend the block only after a correct answer.
                     const finish = () => {
-                        block.setData('used', true);
-                        block.setTint(0x8a5a2b);
+                        if (answeredCorrectly) {
+                            block.setData('used', true);
+                            block.setTint(0x8a5a2b);
+                        }
                         self.physics.resume();
                         self.anims.resumeAll();
                         modal.hide();
@@ -553,12 +646,10 @@ define([
                         const chosen = root.find('[data-optid="' + optionId + '"]');
                         let feedbackHtml;
                         if (checkResult.correct) {
+                            answeredCorrectly = true;
                             chosen.removeClass('btn-outline-primary').addClass('btn-success text-white');
                             feedbackHtml = '<div class="alert alert-success mb-0">' + strCorrect + '</div>';
-                            ajax.call([{
-                                methodname: 'mod_playerland_save_progress',
-                                args: {playerlandid: self.gameConfig.id, blocksresolved: 1}
-                            }]);
+                            self.applyProgress(checkResult);
                         } else {
                             chosen.removeClass('btn-outline-primary').addClass('btn-danger text-white');
                             if (checkResult.correctoptionid) {
