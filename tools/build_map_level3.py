@@ -81,27 +81,28 @@ MARKERS = {
 # --- Rooms ------------------------------------------------------------------
 # Row indices are printed for authoring convenience; the builder ignores them.
 
-# ROOM 1 - A Trilha: run, jump a small pit, roll/crouch under a low ceiling.
+# ROOM 1 - A Trilha: run, jump a small pit, crawl through a mound at floor level.
+# The crawl mound itself is stamped by CRAWL_MOUNDS (below) so its columns cannot
+# drift out of alignment; here we only place the markers.
 ROOM_1 = [
     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",  # 0-14
-    "            ccc                           ",  # 15
-    "            ?       ?      ######          ",  # 16
-    "                          ######          ",  # 17
-    "   @                      ######          ",  # 18
-    "      i        o        o  cc             ",  # 19
+    "            ccc",  # 15
+    "            ?       ?",  # 16
+    "",  # 17
+    "   @",  # 18
+    "      i       o      o     cc",  # 19  crawl slot sits at cols 24-31
     "===================================    ===",  # 20  pit cols 35-38
 ]
 
 # ROOM 2 - O Desfiladeiro: a moving platform and a crumbling bridge over two
-# pits, a patrolling eagle, then a low crouch tunnel.
+# pits, a patrolling eagle, then a crawl mound.
 ROOM_2 = [
     "", "", "", "", "", "", "", "",  # 0-7
-    "                              e                   ",  # 8
-    "", "", "", "", "", "", "",  # 9-15
-    "          c                         ?     ######  ",  # 16
-    "                     C  C  C              ######  ",  # 17
-    "                                          ######  ",  # 18
-    "  S   P                          j         c      ",  # 19
+    "                              e",  # 8
+    "", "", "", "", "", "", "", "",  # 9-16
+    "                     C  C  C",  # 17
+    "",  # 18
+    "  S   P                          j         c      ",  # 19  crawl slot at cols 42-47
     "=====         =====          =====================",  # 20  pits 5-13, 19-28
 ]
 
@@ -165,6 +166,15 @@ ROOM_5 = [
 
 ROOMS = [ROOM_1, ROOM_2, ROOM_3, ROOM_4, ROOM_5]
 HOLLOW_ROOMS = {2}
+
+# Solid mounds with a one-tile crawl slot at row 19, stamped straight into the
+# tile data so their columns can never drift. Each is (global_col, span, top_row):
+# tiles fill top_row..18, row 19 stays open, and the floor/fill below closes it
+# into a tunnel carved through a hill.
+CRAWL_MOUNDS = [
+    (24, 8, 14),   # Room 1
+    (84, 6, 15),   # Room 2
+]
 
 
 def room_char(room, r, c):
@@ -250,6 +260,22 @@ def build():
                 obj['properties'] = [prop_entry(k, v) for k, v in props.items()]
             objects.append(obj)
             next_id += 1
+
+    # Stamp the crawl mounds.
+    for col, span, top in CRAWL_MOUNDS:
+        for r in range(top, FLOOR_ROW - 1):
+            for c in range(col, col + span):
+                if 0 <= c < width:
+                    data[r * width + c] = GID_DIRT
+
+    # Cap every exposed top of solid dirt with a grass tile so a floating or
+    # cut-into block reads as terrain instead of a flat maroon slab.
+    for row in range(1, height):
+        for col in range(width):
+            here = data[row * width + col]
+            above = data[(row - 1) * width + col]
+            if here == GID_DIRT and above == 0:
+                data[row * width + col] = GID_GRASS
 
     # Vertical runs of ladder cells become rectangle markers.
     by_column = {}
