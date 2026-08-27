@@ -37,8 +37,20 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Phaser's FIT scale mode fits the 800x600 game into this box. Below 800px wide
+   it scales down; in fullscreen the :fullscreen rule takes over. */
+.path-mod-playerland #playerland-game-container {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+}
+
+.path-mod-playerland #playerland-game-container:fullscreen {
+    aspect-ratio: auto;
+    height: 100%;
+    /* Mirrors the Phaser stage backgroundColor so the letterbox bars blend in. */
+    background: var(--pl-stage-bg, #2d4a52);
+}
+
 .path-mod-playerland #playerland-game-container canvas {
     display: block;
-    width: 100%;
-    height: auto;
 }

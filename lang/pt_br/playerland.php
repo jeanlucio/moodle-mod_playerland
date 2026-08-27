@@ -32,6 +32,7 @@ $string['err_positiveint'] = 'Informe um número maior que zero.';
 $string['error_no_correct_option'] = 'Você deve selecionar uma opção correta.';
 $string['exitlocked'] = 'Responda mais {$a} pergunta(s) para destravar a saída.';
 $string['exitunlocked'] = 'Saída destravada!';
+$string['fullscreen'] = 'Tela cheia (F)';
 $string['gamesettings'] = 'Configurações do jogo';
 $string['invalidquestion'] = 'Pergunta inválida.';
 $string['iscorrect'] = 'Alternativa correta';

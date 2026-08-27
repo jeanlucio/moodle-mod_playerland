@@ -199,6 +199,7 @@ define([
                 }
 
                 this.buildHud();
+                this.buildFullscreenButton();
                 this.startMusic();
             }
 
@@ -490,6 +491,53 @@ define([
             }
 
             /**
+             * Adds the corner fullscreen toggle and binds the F key.
+             */
+            buildFullscreenButton() {
+                this.fsButton = this.add.text(794, 6, '⛶', {
+                    fontFamily: 'monospace',
+                    fontSize: '20px',
+                    color: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setOrigin(1, 0).setScrollFactor(0).setDepth(40)
+                    .setInteractive({useHandCursor: true});
+
+                this.fsButton.on('pointerover', () => this.fsButton.setColor('#ffd54a'));
+                this.fsButton.on('pointerout', () => this.fsButton.setColor('#ffffff'));
+                this.fsButton.on('pointerup', () => this.toggleFullscreen());
+
+                this.fsKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+                this.input.keyboard.addCapture('F');
+
+                str.get_string('fullscreen', 'mod_playerland').then(label => {
+                    this.fsHint = this.add.text(794, 30, label, {
+                        fontFamily: 'monospace',
+                        fontSize: '9px',
+                        color: '#ffffff',
+                        stroke: '#000000',
+                        strokeThickness: 3
+                    }).setOrigin(1, 0).setScrollFactor(0).setDepth(40);
+                    this.time.delayedCall(4000, () => {
+                        this.tweens.add({targets: this.fsHint, alpha: 0, duration: 600});
+                    });
+                    this.fsButton.on('pointerover', () => this.fsHint.setAlpha(1));
+                    return null;
+                }).catch(Notification.exception);
+            }
+
+            /**
+             * Enters or leaves fullscreen on the game container.
+             */
+            toggleFullscreen() {
+                if (this.scale.isFullscreen) {
+                    this.scale.stopFullscreen();
+                } else {
+                    this.scale.startFullscreen();
+                }
+            }
+
+            /**
              * Starts the background music loop, respecting the browser autoplay policy.
              */
             startMusic() {
@@ -611,6 +659,12 @@ define([
             }
 
             update(time) {
+                // Fullscreen toggle works in every state except while the question modal
+                // is open (going fullscreen then would displace the Bootstrap dialog).
+                if (this.fsKey && Phaser.Input.Keyboard.JustDown(this.fsKey) && !this.isModalOpen) {
+                    this.toggleFullscreen();
+                }
+
                 // Level finished: wait for ENTER to restart, ignore all other input.
                 if (this.levelComplete) {
                     if (Phaser.Input.Keyboard.JustDown(this.startKey)) {

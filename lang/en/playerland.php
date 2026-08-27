@@ -32,6 +32,7 @@ $string['err_positiveint'] = 'Enter a number greater than zero.';
 $string['error_no_correct_option'] = 'You must select one correct option.';
 $string['exitlocked'] = 'Answer {$a} more question(s) to unlock the exit.';
 $string['exitunlocked'] = 'Exit unlocked!';
+$string['fullscreen'] = 'Fullscreen (F)';
 $string['gamesettings'] = 'Game settings';
 $string['invalidquestion'] = 'Invalid question.';
 $string['iscorrect'] = 'Correct answer';

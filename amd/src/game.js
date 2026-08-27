@@ -68,9 +68,17 @@ define([
 
         const phaserConfig = {
             type: Phaser.AUTO,
-            width: 800,
-            height: 600,
-            parent: 'playerland-game-container',
+            scale: {
+                // FIT keeps the 800x600 view and scales it uniformly to the parent (and to
+                // the whole screen in fullscreen), so every sprite grows together and the
+                // level framing never changes. autoCenter letterboxes it on odd aspects.
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                parent: 'playerland-game-container',
+                width: 800,
+                height: 600,
+                fullscreenTarget: 'playerland-game-container'
+            },
             backgroundColor: '#2d4a52', // Matches the dark background art, hides any camera gap.
             pixelArt: true, // Crucial for crisp pixel art!
             physics: {
