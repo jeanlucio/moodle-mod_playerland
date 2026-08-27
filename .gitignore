@@ -17,3 +17,6 @@ Thumbs.db
 # AI assistant session/workspace directories, not part of the plugin.
 .claude
 .plans
+
+# Throwaway runner for the original Phaser 2 Sunny Land demo (reference only).
+/_demo/
