@@ -74,5 +74,14 @@ function xmldb_playerland_upgrade(int $oldversion): bool {
         upgrade_mod_savepoint(true, 2026082700, 'playerland');
     }
 
+    if ($oldversion < 2026082701) {
+        $table = new xmldb_table('playerland');
+        $field = new xmldb_field('map', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'map.json', 'targetquestions');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026082701, 'playerland');
+    }
+
     return true;
 }

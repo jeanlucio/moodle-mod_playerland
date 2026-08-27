@@ -16,6 +16,7 @@
         <FIELD NAME="levels" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Number of levels"/>
         <FIELD NAME="targetquestions" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="3" SEQUENCE="false"
             COMMENT="Required distinct correct questions to unlock the exit"/>
+        <FIELD NAME="map" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="map.json" SEQUENCE="false" COMMENT="Map file to load"/>
         <FIELD NAME="grade" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="100" SEQUENCE="false" COMMENT="The maximum grade. Can be negative to indicate the use of a scale."/>
       </FIELDS>
       <KEYS>

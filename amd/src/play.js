@@ -140,8 +140,8 @@ define([
                             const block = this.questionBlocks.create(obj.x, obj.y, 'question_block');
                             block.setScale(0.5);
                             block.refreshBody();
-                        } else if (kind === 'opossum') {
-                            this.spawnEnemy(obj.x, obj.y);
+                        } else if (kind === 'opossum' || kind === 'eagle' || kind === 'frog') {
+                            this.spawnEnemy(obj.x, obj.y, kind);
                         } else if (kind === 'exit') {
                             // Flag stands on the floor: anchor its bottom to the marker point.
                             this.exit = this.physics.add.staticImage(obj.x, obj.y, 'exit_flag');
@@ -433,46 +433,85 @@ define([
             }
 
             /**
-             * Creates a patrolling opossum enemy at the given position.
+             * Creates a patrolling or dynamic enemy at the given position.
              *
              * @param {number} x World x of the spawn marker.
              * @param {number} y World y of the spawn marker.
+             * @param {string} kind Type of the enemy (opossum, eagle, frog).
              */
-            spawnEnemy(x, y) {
-                const enemy = this.enemies.create(x, y, 'atlas', 'opossum/opossum-1');
+            spawnEnemy(x, y, kind = 'opossum') {
+                const enemy = this.enemies.create(x, y, 'atlas', `${kind}/${kind}-1`);
+                enemy.setData('kind', kind);
                 enemy.setData('alive', true);
-                enemy.setData('speed', 50);
                 enemy.setCollideWorldBounds(true);
+
+                if (kind === 'eagle') {
+                    enemy.setData('speed', 60);
+                    enemy.body.allowGravity = false;
+                    enemy.anims.play('eagle-attack', true);
+                } else if (kind === 'frog') {
+                    enemy.setData('speed', 0);
+                    enemy.setData('jumpTimer', this.time.now + Math.random() * 2000);
+                    enemy.anims.play('frog-idle', true);
+                } else {
+                    enemy.setData('speed', 50);
+                    enemy.anims.play('opossum-walk', true);
+                }
+
                 enemy.setVelocityX(-enemy.getData('speed'));
-                enemy.anims.play('opossum-walk', true);
             }
 
             /**
-             * Moves the enemies and turns them around at walls and platform edges.
+             * Moves the enemies based on their kind.
              */
             updateEnemies() {
                 this.enemies.getChildren().forEach(enemy => {
                     if (!enemy.getData('alive')) {
                         return;
                     }
+                    const kind = enemy.getData('kind');
                     const speed = enemy.getData('speed');
                     let dir = enemy.body.velocity.x < 0 ? -1 : 1;
 
-                    if (enemy.body.blocked.left) {
-                        dir = 1;
-                    } else if (enemy.body.blocked.right) {
-                        dir = -1;
-                    } else {
-                        // Turn back if there is no ground ahead (platform/pit edge).
-                        const aheadX = enemy.x + dir * (enemy.body.halfWidth + 2);
-                        const belowY = enemy.body.bottom + 2;
-                        if (!this.layer.getTileAtWorldXY(aheadX, belowY)) {
-                            dir = -dir;
+                    if (kind === 'eagle') {
+                        if (enemy.body.blocked.left) {
+                            dir = 1;
+                        } else if (enemy.body.blocked.right) {
+                            dir = -1;
                         }
-                    }
+                        enemy.setVelocityX(dir * speed);
+                        enemy.setFlipX(dir > 0);
+                    } else if (kind === 'frog') {
+                        if (enemy.body.onFloor()) {
+                            enemy.setVelocityX(0);
+                            enemy.anims.play('frog-idle', true);
 
-                    enemy.setVelocityX(dir * speed);
-                    enemy.setFlipX(dir > 0);
+                            const dist = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+                            if (dist < 150 && this.time.now > enemy.getData('jumpTimer')) {
+                                enemy.setVelocityY(-250);
+                                const jumpDir = this.player.x < enemy.x ? -1 : 1;
+                                enemy.setVelocityX(jumpDir * 80);
+                                enemy.setFlipX(jumpDir > 0);
+                                enemy.anims.play('frog-jump', true);
+                                enemy.setData('jumpTimer', this.time.now + 1500 + Math.random() * 1000);
+                            }
+                        }
+                    } else {
+                        if (enemy.body.blocked.left) {
+                            dir = 1;
+                        } else if (enemy.body.blocked.right) {
+                            dir = -1;
+                        } else {
+                            // Turn back if there is no ground ahead (platform/pit edge).
+                            const aheadX = enemy.x + dir * (enemy.body.halfWidth + 2);
+                            const belowY = enemy.body.bottom + 2;
+                            if (!this.layer.getTileAtWorldXY(aheadX, belowY)) {
+                                dir = -dir;
+                            }
+                        }
+                        enemy.setVelocityX(dir * speed);
+                        enemy.setFlipX(dir > 0);
+                    }
                 });
             }
 

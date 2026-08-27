@@ -56,6 +56,14 @@ class mod_playerland_mod_form extends moodleform_mod {
         $mform->setDefault('levels', 1);
         $mform->addRule('levels', get_string('err_positiveint', 'mod_playerland'), 'numeric', null, 'client');
 
+        $mapoptions = [
+            'map.json' => get_string('map_default', 'mod_playerland'),
+            'map_level2.json' => get_string('map_level2', 'mod_playerland'),
+        ];
+        $mform->addElement('select', 'map', get_string('map', 'mod_playerland'), $mapoptions);
+        $mform->setDefault('map', 'map.json');
+        $mform->addHelpButton('map', 'map', 'mod_playerland');
+
         $mform->addElement('text', 'targetquestions', get_string('targetquestions', 'mod_playerland'), ['size' => '4']);
         $mform->setType('targetquestions', PARAM_INT);
         $mform->setDefault('targetquestions', 3);

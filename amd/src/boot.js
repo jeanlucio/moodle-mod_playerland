@@ -56,10 +56,10 @@ define([], function() {
                 loadingText.destroy();
             });
 
-            // Load Tilemap. The map JSON is a static asset the browser caches aggressively;
-            // a cache-buster guarantees level edits show up without a hard refresh.
+            // Load Tilemap based on config.
+            const mapFile = this.gameConfig.map || 'map.json';
             this.load.image('tileset', assetsUrl + '/environment/tileset.png');
-            this.load.tilemapTiledJSON('map', assetsUrl + '/maps/map.json?cb=' + Date.now());
+            this.load.tilemapTiledJSON('map', assetsUrl + '/maps/' + mapFile + '?cb=' + Date.now());
 
             // Load Backgrounds
             this.load.image('bg-back', assetsUrl + '/environment/back.png');
@@ -154,6 +154,27 @@ define([], function() {
                 key: 'enemy-death',
                 frames: this.anims.generateFrameNames('atlas', {prefix: 'enemy-death/enemy-death-', start: 1, end: 6}),
                 frameRate: 12,
+                repeat: 0
+            });
+
+            this.anims.create({
+                key: 'eagle-attack',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'eagle/eagle-attack-', start: 1, end: 4}),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'frog-idle',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'frog/idle/frog-idle-', start: 1, end: 4}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'frog-jump',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'frog/jump/frog-jump-', start: 1, end: 2}),
+                frameRate: 10,
                 repeat: 0
             });
 

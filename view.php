@@ -58,6 +58,7 @@ $config = [
     'id' => $playerland->id,
     'assetsurl' => (new moodle_url('/mod/playerland/assets'))->out(false),
     'levels' => $playerland->levels,
+    'map' => $playerland->map,
     'targetquestions' => max(1, (int)($playerland->targetquestions ?? 1)),
     'blocksresolved' => 0,
 ];
