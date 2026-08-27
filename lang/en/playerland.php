@@ -42,6 +42,7 @@ $string['map'] = 'Game map';
 $string['map_default'] = 'Default Map (Tests)';
 $string['map_help'] = 'Select the map to load for this game instance.';
 $string['map_level2'] = 'Robust Level (Eagle & Frog)';
+$string['map_level3'] = 'Woodland Ruins (full challenge run)';
 $string['modulename'] = 'PlayerLand';
 $string['modulename_help'] = 'The PlayerLand activity allows students to play a 2D platformer game (like Super Mario). Hitting question blocks will trigger a Moodle question modal. Correct answers yield rewards and progress. The teacher can configure multiple levels and proportional grading.';
 $string['modulenameplural'] = 'PlayerLands';

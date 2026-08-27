@@ -68,8 +68,16 @@ define([], function() {
             // Load Atlas (sprites)
             this.load.atlas('atlas', assetsUrl + '/atlas/atlas.png', assetsUrl + '/atlas/atlas.json');
 
-            // Load Audio (optional, check if exists)
-            // this.load.audio('music', assetsUrl + '/sound/platformer_level03_loop.ogg');
+            // Load the props atlas: spikes, crates, platforms, crank, door, decorative pieces.
+            // Every frame here is a single static image referenced by name from PlayScene.
+            this.load.atlas(
+                'props',
+                assetsUrl + '/atlas/atlas-props.png',
+                assetsUrl + '/atlas/atlas-props.json'
+            );
+
+            // Background music loop. Playback is opt-in and starts muted-friendly from PlayScene.
+            this.load.audio('music', assetsUrl + '/sound/platformer_level03_loop.ogg');
 
             // Question block (temporarily generating an SVG for it since it's not in the atlas)
             const svgParts = [
@@ -118,6 +126,22 @@ define([], function() {
                 frames: this.anims.generateFrameNames('atlas', {prefix: 'player/hurt/player-hurt-', start: 1, end: 2}),
                 frameRate: 10,
                 repeat: 0
+            });
+
+            // Crouch / crawl pose, also reused for the ground roll (dash).
+            this.anims.create({
+                key: 'player-crouch',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'player/crouch/player-crouch-', start: 1, end: 2}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            // Ladder climb. Held still on a ladder shows the first frame only (handled in code).
+            this.anims.create({
+                key: 'player-climb',
+                frames: this.anims.generateFrameNames('atlas', {prefix: 'player/climb/player-climb-', start: 1, end: 3}),
+                frameRate: 9,
+                repeat: -1
             });
 
             // Collectible and feedback animations (sprites already present in the atlas).

@@ -59,6 +59,7 @@ class mod_playerland_mod_form extends moodleform_mod {
         $mapoptions = [
             'map.json' => get_string('map_default', 'mod_playerland'),
             'map_level2.json' => get_string('map_level2', 'mod_playerland'),
+            'map_level3.json' => get_string('map_level3', 'mod_playerland'),
         ];
         $mform->addElement('select', 'map', get_string('map', 'mod_playerland'), $mapoptions);
         $mform->setDefault('map', 'map.json');
