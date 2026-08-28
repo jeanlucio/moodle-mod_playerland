@@ -11,7 +11,7 @@ PHP), já que ela é verificada entre versões tanto no Moodle 5.1 (PHPUnit 11) 
 | Arquivo de teste | Casos | O que é coberto |
 |-----------|------:|-----------------|
 | `privacy/provider_test.php` | 23 | Declaração de metadados mais uma guarda de deriva que garante que toda coluna declarada da tabela bate com o esquema real; contextos, lista de usuários, exportação em contexto único/múltiplo, e os três caminhos de exclusão, cada um checado contra um contexto não-módulo, um módulo de curso órfão (apagado), e uma lista de usuários vazia, além de uma guarda de regressão contra colisão de tipo de módulo |
-| `lib_grade_test.php` | 13 | Cálculo proporcional de nota (limitado na meta, zerado no piso, meta ausente vira 1, zero para uma nota de atividade não-positiva); os caminhos VALUE/SCALE/NONE do item de nota; `update_grades()` para todos os usuários, para um usuário sem tentativa, e para um usuário com uma |
+| `lib_grade_test.php` | 16 | Cálculo proporcional de nota (limitado na meta, zerado no piso, meta ausente vira 1, zero para uma nota de atividade não-positiva); os caminhos VALUE/SCALE/NONE do item de nota; uma nota mínima configurada realmente chegando ao item de nota; `'reset'` limpando notas registradas sem apagar o item; `update_grades()` para todos os usuários (com e sem nenhuma tentativa ainda), para um usuário sem tentativa, e para um usuário com uma |
 | `external/check_answer_test.php` | 5 | Respostas corretas registradas exatamente uma vez (idempotente numa repetição), respostas erradas não registradas em lugar nenhum mas ainda revelam o id da opção correta, um id de pergunta desconhecido rejeitado com o código de erro dedicado, o gradebook atualizado depois de uma resposta correta |
 | `external/get_question_test.php` | 5 | A cadeia de fallback tópico→mini-lição: tópico específico não respondido preferido, caindo para qualquer pergunta desse tópico antes do pool geral, caindo para o pool geral quando o tópico não tem nenhuma, texto de alternativa formatado em vez de ecoado cru |
 | `external/save_progress_test.php` | 5 | Criação de tentativa na primeira chamada, a contagem de progresso enviada pelo cliente nunca confiada (sempre recalculada do banco), conclusão reportada assim que a meta é atingida, a capability `view` realmente aplicada, um id de instância desconhecido rejeitado |
@@ -24,7 +24,7 @@ PHP), já que ela é verificada entre versões tanto no Moodle 5.1 (PHPUnit 11) 
 | `uninstall_test.php` | 2 | O hook de desinstalação apaga só linhas de `user_preferences` prefixadas com `mod_playerland_`, deixando intactas as preferências de qualquer outro plugin; uma execução sem nada a apagar não gera erro |
 | `phaser_loading_test.php` | 2 | Guarda de regressão estrutural: nenhuma tag `<script>` estática enfileira o Phaser, o `game.js` o carrega dinamicamente |
 | `lib_supports_test.php` | 1 | Toda flag de feature declarada, incluindo uma feature não reconhecida devolvendo `null` |
-| **Total** | **79** | |
+| **Total** | **82** | |
 
 ```bash
 vendor/bin/phpunit --bootstrap lib/phpunit/bootstrap.php mod/playerland/tests
@@ -40,12 +40,21 @@ CI). O escopo padrão da ferramenta é `classes/` mais os arquivos de topo `lib.
 |---|---|
 | Classes | 75% (3/4 totalmente cobertas) |
 | Métodos | 96,30% (26/27) |
-| Linhas | 88,04% (471/535) |
+| Linhas | 89,01% (486/546) |
 
-* **`classes/privacy/provider.php`** — a lacuna sinalizada numa rodada anterior — agora está em
-  **100% de linhas e métodos (7/7)**, incluindo três guardas de contexto não-módulo, uma guarda
-  de módulo de curso órfão, e uma guarda de lista de usuários vazia que um teste de caminho feliz
-  puro nunca alcançaria.
+* **`lib.php` agora está em 100% de linhas e métodos.** Fechar essa lacuna revelou um bug real,
+  não só um buraco de teste: `playerland_grade_item_update()` repassava `gradepass` para o
+  `grade_update()` do core, que ignora essa chave em silêncio — a própria lista de permissão
+  interna dele (`lib/gradelib.php`) só deixa passar `itemname`/`idnumber`/`gradetype`/
+  `grademax`/`grademin`/`scaleid`/`multfactor`/`plusfactor`/`deleted`/`hidden`. Uma nota mínima
+  configurada nunca chegava de fato ao gradebook. Corrigido aplicando-a diretamente no objeto
+  `grade_item` depois (o mesmo padrão que o `mod_workshop` usa), e coberto por um teste que
+  garante que a nota mínima realmente chega ao item, mais um para o caminho `'reset'` (limpa
+  notas registradas sem apagar o item) e um para o caminho de atividade inteira sem nenhuma
+  tentativa ainda.
+* **`classes/privacy/provider.php`** está em **100% de linhas e métodos (7/7)**, incluindo três
+  guardas de contexto não-módulo, uma guarda de módulo de curso órfão, e uma guarda de lista de
+  usuários vazia que um teste de caminho feliz puro nunca alcançaria.
 * **`classes/form/question_form.php`** e **`classes/event/course_module_viewed.php`** também
   estão em **100%** — ambos são pequenos o suficiente para que toda sua lógica real (uma regra de
   validação; um `init()` definindo três propriedades) seja coberta por completo.
@@ -55,12 +64,7 @@ CI). O escopo padrão da ferramenta é `classes/` mais os arquivos de topo `lib.
   despacho completo de `call_external_function()` que `save_progress`/`get_question`/
   `check_answer` usam — e que é o que realmente exercita a própria etapa de conversão `_returns()`
   de cada método.
-* **`lib.php`** está em 96,23% de linhas. Seus dois métodos abaixo do limite estrito de 100% são
-  `grade_item_update()` (89,66% de linhas — o caminho de notas `'reset'` e o parâmetro opcional
-  `gradepass` são os dois ramos que nenhum teste atual exercita) e `update_grades()` (96%, uma
-  linha — o caminho de atividade inteira sem tentativas para `userid=0` numa instância com nota
-  positiva que ninguém jogou ainda).
 * **`db/upgrade.php`** (0/55 linhas) é o script histórico de migração de esquema. Pela convenção
   do projeto, ele mira um estado de esquema pré-upgrade específico em vez do esquema novo que o
   PHPUnit instala, então não é testado diretamente — a única razão restante pela qual a cobertura
-  de linhas agregada acima fica abaixo dos quase 100% que cada classe individual alcança.
+  de linhas agregada acima fica abaixo dos 100% que cada classe individual alcança agora.

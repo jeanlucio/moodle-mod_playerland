@@ -129,6 +129,61 @@ final class lib_grade_test extends \advanced_testcase {
     }
 
     /**
+     * Tests that a configured pass grade is forwarded to the grade item.
+     *
+     * @return void
+     */
+    public function test_grade_item_update_sets_gradepass_when_configured(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_playerland');
+        $instance = $generator->create_instance(['course' => $course->id, 'grade' => 100]);
+        $instance->gradepass = 60;
+
+        $result = playerland_grade_item_update($instance);
+
+        $this->assertSame(GRADE_UPDATE_OK, $result);
+        $item = $DB->get_record('grade_items', [
+            'itemmodule' => 'playerland',
+            'iteminstance' => $instance->id,
+        ], '*', MUST_EXIST);
+        $this->assertEqualsWithDelta(60.0, (float) $item->gradepass, 0.001);
+    }
+
+    /**
+     * Tests that passing 'reset' as $grades clears every grade recorded against the
+     * item without deleting the item itself — the gradebook item survives so future
+     * attempts still have somewhere to record a grade.
+     *
+     * @return void
+     */
+    public function test_grade_item_update_with_reset_clears_grades_but_keeps_the_item(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_playerland');
+        $instance = $generator->create_instance(['course' => $course->id, 'grade' => 100]);
+
+        $grade = new \stdClass();
+        $grade->userid = 2;
+        $grade->rawgrade = 75.0;
+        playerland_grade_item_update($instance, [2 => $grade]);
+
+        $itemid = $DB->get_field('grade_items', 'id', [
+            'itemmodule' => 'playerland',
+            'iteminstance' => $instance->id,
+        ], MUST_EXIST);
+        $this->assertSame(1, $DB->count_records('grade_grades', ['itemid' => $itemid, 'userid' => 2]));
+
+        $result = playerland_grade_item_update($instance, 'reset');
+
+        $this->assertSame(GRADE_UPDATE_OK, $result);
+        $this->assertSame(0, $DB->count_records('grade_grades', ['itemid' => $itemid, 'userid' => 2]));
+        $this->assertTrue($DB->record_exists('grade_items', ['id' => $itemid]));
+    }
+
+    /**
      * Tests that a negative grade configures a scale-based grade item, using the
      * absolute value as the scale id.
      *
@@ -230,6 +285,30 @@ final class lib_grade_test extends \advanced_testcase {
             'itemmodule' => 'playerland',
             'iteminstance' => $instance->id,
         ]));
+    }
+
+    /**
+     * Tests that update_grades() for the whole activity (userid=0) on a graded
+     * instance nobody has attempted yet only refreshes the grade item, the same
+     * whole-activity branch a freshly-created, never-played instance would hit.
+     *
+     * @return void
+     */
+    public function test_update_grades_for_all_users_with_no_attempts_only_updates_item(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_playerland');
+        $instance = $generator->create_instance(['course' => $course->id, 'grade' => 100]);
+
+        playerland_update_grades($instance);
+
+        $item = $DB->get_record('grade_items', [
+            'itemmodule' => 'playerland',
+            'iteminstance' => $instance->id,
+        ], '*', MUST_EXIST);
+        $this->assertEquals(GRADE_TYPE_VALUE, $item->gradetype);
+        $this->assertSame(0, $DB->count_records('grade_grades', ['itemid' => $item->id]));
     }
 
     /**

@@ -77,16 +77,13 @@ function playerland_grade_item_update(stdClass $playerland, mixed $grades = null
         $params['gradetype'] = GRADE_TYPE_NONE;
     }
 
-    if (!empty($playerland->gradepass)) {
-        $params['gradepass'] = (float)$playerland->gradepass;
-    }
-
-    if ($grades === 'reset') {
+    $isreset = $grades === 'reset';
+    if ($isreset) {
         $params['reset'] = true;
         $grades = null;
     }
 
-    return grade_update(
+    $result = grade_update(
         'mod/playerland',
         $playerland->course,
         'mod',
@@ -96,6 +93,27 @@ function playerland_grade_item_update(stdClass $playerland, mixed $grades = null
         $grades,
         $params
     );
+
+    // The core grade_update() function silently ignores a 'gradepass' key in
+    // $itemdetails: its own internal allow-list (lib/gradelib.php) only lets
+    // itemname/idnumber/gradetype/grademax/grademin/scaleid/multfactor/plusfactor/
+    // deleted/hidden through. The pass grade has to be applied directly on the
+    // grade_item instead, mirroring how mod_workshop does it.
+    if ($result === GRADE_UPDATE_OK && !$isreset && !empty($playerland->gradepass)) {
+        $gradeitem = grade_item::fetch([
+            'itemtype' => 'mod',
+            'itemmodule' => 'playerland',
+            'iteminstance' => $playerland->id,
+            'itemnumber' => 0,
+            'courseid' => $playerland->course,
+        ]);
+        if ($gradeitem && (float)$gradeitem->gradepass !== (float)$playerland->gradepass) {
+            $gradeitem->gradepass = (float)$playerland->gradepass;
+            $gradeitem->update();
+        }
+    }
+
+    return $result;
 }
 
 /**
