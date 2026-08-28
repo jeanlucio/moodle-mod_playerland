@@ -36,6 +36,9 @@ define([
     const TUNING = {
         runSpeed: 150,
         jumpVelocity: -260,
+        // Variable jump height: releasing the jump key while still rising multiplies
+        // the upward speed by this, so a tap is a short hop and a hold is the full jump.
+        jumpCutFactor: 0.5,
         dashSpeed: 300,
         dashDuration: 220,
         dashCooldown: 550,
@@ -79,6 +82,7 @@ define([
                 this.dashUntil = 0;
                 this.dashReadyAt = 0;
                 this.dashDir = 1;
+                this.isJumpCut = true;
                 this.inputLockUntil = 0;
                 this.prevVelocityY = 0;
                 this.ladders = [];
@@ -697,6 +701,9 @@ define([
 
                 this.detectHardLanding();
 
+                const input = this.readInput();
+                this.applyVariableJump(input);
+
                 if (this.tryPullCrank()) {
                     this.player.setVelocityX(0);
                     this.player.anims.play('player-idle', true);
@@ -714,7 +721,7 @@ define([
                     return;
                 }
 
-                this.handleGroundAndAir(time);
+                this.handleGroundAndAir(time, input);
 
                 // Scroll parallax backgrounds.
                 this.bgBack.tilePositionX = this.cameras.main.scrollX * 0.1;
@@ -920,17 +927,35 @@ define([
             }
 
             /**
-             * Reads the current directional input into a small state object.
+             * Reads the current directional input into a small state object. Must be
+             * called exactly once per frame — JustDown() consumes the edge.
              *
-             * @return {object} Flags for left, right, down and a fresh jump press.
+             * @return {object} left, right, down, a fresh jump press, and the held state.
              */
             readInput() {
                 return {
                     left: this.cursors.left.isDown || this.wasd.left.isDown,
                     right: this.cursors.right.isDown || this.wasd.right.isDown,
                     down: this.cursors.down.isDown || this.wasd.down.isDown,
-                    jump: Phaser.Input.Keyboard.JustDown(this.cursors.space)
+                    jump: Phaser.Input.Keyboard.JustDown(this.cursors.space),
+                    jumpDown: this.cursors.space.isDown
                 };
+            }
+
+            /**
+             * Variable jump height: releasing the jump key while still rising cuts the
+             * upward speed, so a tap is a short hop and a hold is the full jump.
+             *
+             * @param {object} input The directional input state.
+             */
+            applyVariableJump(input) {
+                if (this.isJumpCut || input.jumpDown) {
+                    return;
+                }
+                if (this.player.body.velocity.y < 0) {
+                    this.player.setVelocityY(this.player.body.velocity.y * TUNING.jumpCutFactor);
+                }
+                this.isJumpCut = true;
             }
 
             /**
@@ -958,6 +983,7 @@ define([
                 this.player.setVelocity(TUNING.wallJumpX * away, TUNING.wallJumpY);
                 this.player.setFlipX(away < 0);
                 this.inputLockUntil = time + TUNING.wallJumpLock;
+                this.isJumpCut = false;
                 return true;
             }
 
@@ -979,9 +1005,9 @@ define([
              * Standard ground/air control: run, jump, crouch, crawl, wall-slide, wall-jump.
              *
              * @param {number} time The scene time in ms.
+             * @param {object} input The directional input state read this frame.
              */
-            handleGroundAndAir(time) {
-                const input = this.readInput();
+            handleGroundAndAir(time, input) {
                 const inputLocked = time < this.inputLockUntil;
 
                 if (this.handleWall(input, time)) {
@@ -1004,6 +1030,7 @@ define([
 
                 if (input.jump && onFloor && !this.isCrouching) {
                     this.player.setVelocityY(TUNING.jumpVelocity);
+                    this.isJumpCut = false;
                 }
                 this.animatePlayer(onFloor, input.left || input.right);
             }
