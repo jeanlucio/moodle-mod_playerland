@@ -84,7 +84,11 @@ def _room_char(room, r, c):
 
 
 def _assemble(rooms, hollow_rooms):
-    """Stitches rooms side by side, auto-filling ground below non-hollow floors."""
+    """Stitches rooms side by side, auto-filling ground below non-hollow floors.
+
+    Returns (grid rows, col_room) where col_room[c] is the room index owning
+    global column c.
+    """
     widths = []
     for index, room in enumerate(rooms):
         if index in hollow_rooms:
@@ -92,10 +96,12 @@ def _assemble(rooms, hollow_rooms):
         else:
             widths.append(len(room[FLOOR_ROW].rstrip()))
     grid = [[' '] * sum(widths) for _ in range(ROOM_HEIGHT)]
+    col_room = []
 
     base = 0
     for index, (room, width) in enumerate(zip(rooms, widths)):
         hollow = index in hollow_rooms
+        col_room.extend([index] * width)
         for r in range(ROOM_HEIGHT):
             for c in range(width):
                 ch = _room_char(room, r, c)
@@ -105,7 +111,7 @@ def _assemble(rooms, hollow_rooms):
                     grid[r][base + c] = '#'
         base += width
 
-    return [''.join(row) for row in grid]
+    return [''.join(row) for row in grid], col_room
 
 
 def _prop_entry(name, value):
@@ -119,7 +125,7 @@ def _prop_entry(name, value):
     return {'name': name, 'type': kind, 'value': value}
 
 
-def build(rooms, *, hollow_rooms=(), crawl_mounds=(), sign_texts=()):
+def build(rooms, *, hollow_rooms=(), crawl_mounds=(), sign_texts=(), room_topics=()):
     """Turns a list of ASCII rooms into a Tiled map dict.
 
     rooms        list of rooms, each a list of row strings
@@ -128,9 +134,11 @@ def build(rooms, *, hollow_rooms=(), crawl_mounds=(), sign_texts=()):
                  one-tile crawl slot at row 19, stamped straight into the tiles
                  so its columns cannot drift
     sign_texts   text for the numbered sign chars (char '1' -> sign_texts[0])
+    room_topics  mini-lesson topic per room index (1-3, or 0/absent for general);
+                 every question marker in that room gets property n = topic
     """
     hollow_rooms = frozenset(hollow_rooms)
-    grid = _assemble(rooms, hollow_rooms)
+    grid, col_room = _assemble(rooms, hollow_rooms)
     height = len(grid)
     width = len(grid[0])
 
@@ -153,7 +161,13 @@ def build(rooms, *, hollow_rooms=(), crawl_mounds=(), sign_texts=()):
                 text = sign_texts[index] if index < len(sign_texts) else ''
                 kind, anchor, props = 'sign', 'bottom', {'text': text}
             elif ch in MARKERS:
-                kind, anchor, props = MARKERS[ch]
+                kind, anchor, base_props = MARKERS[ch]
+                props = dict(base_props)
+                if kind == 'question':
+                    room = col_room[col] if col < len(col_room) else 0
+                    topic = room_topics[room] if room < len(room_topics) else 0
+                    if topic:
+                        props['n'] = topic
             else:
                 continue
             obj = {

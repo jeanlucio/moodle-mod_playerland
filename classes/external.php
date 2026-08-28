@@ -182,39 +182,78 @@ class external extends external_api {
     public static function get_question_parameters(): external_function_parameters {
         return new external_function_parameters([
             'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
+            'topic' => new external_value(
+                PARAM_INT,
+                'Mini-lesson to draw from (1-3), or 0 for the general pool',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
+    }
+
+    /**
+     * Chooses the pool of unanswered questions for a block, honouring the topic and
+     * falling back so a block is never left without a question.
+     *
+     * @param int $playerlandid The instance id.
+     * @param int $userid The user id.
+     * @param int $topic Preferred mini-lesson (1-3), or 0 for any.
+     * @return array Question records keyed by id.
+     */
+    private static function pick_question_pool(int $playerlandid, int $userid, int $topic): array {
+        global $DB;
+
+        $unanswered = "SELECT q.id, q.questiontext, q.questionformat
+                         FROM {playerland_q} q
+                    LEFT JOIN {playerland_ans} a ON a.questionid = q.id
+                              AND a.playerlandid = q.playerlandid
+                              AND a.userid = :userid
+                        WHERE q.playerlandid = :playerlandid
+                              AND a.id IS NULL";
+        $any = "SELECT id, questiontext, questionformat
+                  FROM {playerland_q}
+                 WHERE playerlandid = :playerlandid";
+        $base = ['userid' => $userid, 'playerlandid' => $playerlandid];
+
+        $attempts = [];
+        if ($topic > 0) {
+            $attempts[] = [$unanswered . ' AND q.topic = :topic', $base + ['topic' => $topic]];
+            $attempts[] = [$any . ' AND topic = :topic', ['playerlandid' => $playerlandid, 'topic' => $topic]];
+        }
+        $attempts[] = [$unanswered, $base];
+        $attempts[] = [$any, ['playerlandid' => $playerlandid]];
+
+        foreach ($attempts as [$sql, $sqlparams]) {
+            $rows = $DB->get_records_sql($sql, $sqlparams);
+            if (!empty($rows)) {
+                return $rows;
+            }
+        }
+        return [];
     }
 
     /**
      * Get a random question for the given playerland instance.
      *
      * @param int $playerlandid
+     * @param int $topic Mini-lesson to draw from (1-3), or 0 for the general pool.
      * @return array
      */
-    public static function get_question(int $playerlandid): array {
+    public static function get_question(int $playerlandid, int $topic = 0): array {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::get_question_parameters(), [
             'playerlandid' => $playerlandid,
+            'topic' => $topic,
         ]);
 
         [, $context] = self::get_validated_instance((int)$params['playerlandid']);
 
-        $sql = "SELECT q.id, q.questiontext, q.questionformat
-                  FROM {playerland_q} q
-             LEFT JOIN {playerland_ans} a ON a.questionid = q.id
-                       AND a.playerlandid = q.playerlandid
-                       AND a.userid = :userid
-                 WHERE q.playerlandid = :playerlandid
-                       AND a.id IS NULL";
-        $questions = $DB->get_records_sql($sql, [
-            'userid' => $USER->id,
-            'playerlandid' => $params['playerlandid'],
-        ]);
-
-        if (empty($questions)) {
-            $questions = $DB->get_records('playerland_q', ['playerlandid' => $params['playerlandid']]);
-        }
+        $questions = self::pick_question_pool(
+            (int)$params['playerlandid'],
+            (int)$USER->id,
+            (int)$params['topic']
+        );
 
         if (empty($questions)) {
             // No questions configured yet.

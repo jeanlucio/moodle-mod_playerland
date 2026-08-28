@@ -41,9 +41,12 @@ ROOM_B = [
 
 ROOMS = [ROOM_A, ROOM_B]
 
+# Room A's question practises mini-lesson 1; Room B is the general pool.
+ROOM_TOPICS = (1, 0)
+
 
 def make():
-    return build(ROOMS, sign_texts=SIGN_TEXTS)
+    return build(ROOMS, sign_texts=SIGN_TEXTS, room_topics=ROOM_TOPICS)
 
 
 if __name__ == '__main__':

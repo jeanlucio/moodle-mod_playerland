@@ -96,5 +96,14 @@ function xmldb_playerland_upgrade(int $oldversion): bool {
         upgrade_mod_savepoint(true, 2026082803, 'playerland');
     }
 
+    if ($oldversion < 2026082804) {
+        $table = new xmldb_table('playerland_q');
+        $field = new xmldb_field('topic', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'questionformat');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026082804, 'playerland');
+    }
+
     return true;
 }

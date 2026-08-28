@@ -77,5 +77,8 @@ $string['questiondeleted'] = 'Question deleted.';
 $string['questionsaved'] = 'Question saved successfully.';
 $string['questionsprogress'] = 'Questions: {$a->resolved}/{$a->target}';
 $string['questiontext'] = 'Question text';
+$string['questiontopic'] = 'Linked to';
+$string['questiontopic_help'] = 'Choose a mini-lesson to make this question part of its practice pool. A question block with property n = 1 to 3 in the map draws only from the matching mini-lesson, falling back to the general pool. "General pool" questions can appear at any question block.';
+$string['questiontopicgeneral'] = 'General pool';
 $string['targetquestions'] = 'Questions required to unlock the exit';
 $string['targetquestions_help'] = 'The number of distinct questions the student must answer correctly before the exit flag can complete the level. The activity grade is calculated proportionally from this target.';

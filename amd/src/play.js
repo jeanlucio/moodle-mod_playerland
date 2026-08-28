@@ -314,6 +314,8 @@ define([
                 const block = this.questionBlocks.create(obj.x, obj.y, 'question_block');
                 block.setScale(0.5);
                 block.refreshBody();
+                // Property n (1-3) ties this block to a mini-lesson's question pool.
+                block.setData('topic', Math.max(0, Number(this.objectProp(obj, 'n', 0))));
             }
 
             /**
@@ -1556,7 +1558,10 @@ define([
                 try {
                     const response = await ajax.call([{
                         methodname: 'mod_playerland_get_question',
-                        args: {playerlandid: this.gameConfig.id}
+                        args: {
+                            playerlandid: this.gameConfig.id,
+                            topic: block.getData('topic') || 0
+                        }
                     }])[0];
 
                     let bodyHtml;

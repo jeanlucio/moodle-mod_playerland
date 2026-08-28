@@ -77,5 +77,8 @@ $string['questiondeleted'] = 'Pergunta excluída.';
 $string['questionsaved'] = 'Pergunta salva com sucesso.';
 $string['questionsprogress'] = 'Perguntas: {$a->resolved}/{$a->target}';
 $string['questiontext'] = 'Texto da pergunta';
+$string['questiontopic'] = 'Vinculada a';
+$string['questiontopic_help'] = 'Escolha uma mini-lição para esta pergunta entrar no conjunto de prática dela. Um bloco de pergunta com a propriedade n = 1 a 3 no mapa sorteia só da mini-lição correspondente, recorrendo ao banco geral se não houver. Perguntas do "banco geral" podem aparecer em qualquer bloco de pergunta.';
+$string['questiontopicgeneral'] = 'Banco geral';
 $string['targetquestions'] = 'Perguntas necessárias para destravar a saída';
 $string['targetquestions_help'] = 'O número de perguntas distintas que o estudante precisa responder corretamente antes que a bandeira de saída possa concluir a fase. A nota da atividade é calculada proporcionalmente a partir dessa meta.';

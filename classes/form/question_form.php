@@ -51,6 +51,18 @@ class question_form extends \moodleform {
         $mform->setType('questiontext', PARAM_RAW);
         $mform->addRule('questiontext', null, 'required', null, 'client');
 
+        // Which mini-lesson this question practises. A question block with property n = 1..3
+        // in the map draws only from the matching topic (falling back to the general pool).
+        $mform->addElement('select', 'topic', get_string('questiontopic', 'mod_playerland'), [
+            0 => get_string('questiontopicgeneral', 'mod_playerland'),
+            1 => get_string('lessonnum', 'mod_playerland', 1),
+            2 => get_string('lessonnum', 'mod_playerland', 2),
+            3 => get_string('lessonnum', 'mod_playerland', 3),
+        ]);
+        $mform->setType('topic', PARAM_INT);
+        $mform->setDefault('topic', 0);
+        $mform->addHelpButton('topic', 'questiontopic', 'mod_playerland');
+
         // Options.
         for ($i = 1; $i <= 4; $i++) {
             $mform->addElement('header', 'hdr_option_' . $i, get_string('option', 'mod_playerland') . ' ' . $i);

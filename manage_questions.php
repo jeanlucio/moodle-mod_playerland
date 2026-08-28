@@ -62,6 +62,7 @@ if ($mform->is_cancelled()) {
     $qrecord->playerlandid = $playerland->id;
     $qrecord->questiontext = $data->questiontext['text'];
     $qrecord->questionformat = $data->questiontext['format'];
+    $qrecord->topic = (int)($data->topic ?? 0);
 
     if (!empty($data->qid)) {
         $qrecord->id = $data->qid;
@@ -114,6 +115,7 @@ if ($action === 'add' || $action === 'edit') {
         $formdata = new stdClass();
         $formdata->qid = $question->id;
         $formdata->cmid = $cm->id;
+        $formdata->topic = $question->topic;
         $formdata->questiontext = [
             'text' => $question->questiontext,
             'format' => $question->questionformat,
@@ -145,8 +147,19 @@ if ($action === 'add' || $action === 'edit') {
     if (empty($questions)) {
         echo $OUTPUT->notification(get_string('noquestions', 'mod_playerland'), 'info');
     } else {
+        $topiclabels = [
+            0 => get_string('questiontopicgeneral', 'mod_playerland'),
+            1 => get_string('lessonnum', 'mod_playerland', 1),
+            2 => get_string('lessonnum', 'mod_playerland', 2),
+            3 => get_string('lessonnum', 'mod_playerland', 3),
+        ];
+
         $table = new html_table();
-        $table->head = [get_string('question', 'mod_playerland'), get_string('actions')];
+        $table->head = [
+            get_string('question', 'mod_playerland'),
+            get_string('questiontopic', 'mod_playerland'),
+            get_string('actions'),
+        ];
         $table->data = [];
 
         foreach ($questions as $q) {
@@ -168,6 +181,7 @@ if ($action === 'add' || $action === 'edit') {
 
             $table->data[] = [
                 format_text($q->questiontext, $q->questionformat),
+                $topiclabels[$q->topic] ?? $topiclabels[0],
                 $actions,
             ];
         }
