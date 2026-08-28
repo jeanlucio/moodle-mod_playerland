@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026082703;
+$plugin->version   = 2026082800;
 $plugin->requires  = 2024100700;
 $plugin->component = 'mod_playerland';
 $plugin->maturity  = MATURITY_ALPHA;

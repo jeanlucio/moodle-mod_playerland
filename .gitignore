@@ -20,3 +20,7 @@ Thumbs.db
 
 # Throwaway runner for the original Phaser 2 Sunny Land demo (reference only).
 /_demo/
+
+# Python bytecode from the level-builder tools.
+__pycache__/
+*.pyc
