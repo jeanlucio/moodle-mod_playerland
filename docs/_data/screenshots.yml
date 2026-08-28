@@ -1,0 +1,18 @@
+# Each entry needs an image at docs/assets/img/screenshots/<file>, plus an
+# English and a Portuguese caption. The screenshots.md pages (en/pt) loop over
+# this list, so adding a new screenshot never touches the gallery markup.
+- file: gameplay.jpg
+  caption_en: "Huddy exploring Level 9 (Woodland Ruins): tile terrain, the cherry/gem HUD counters and the fullscreen button"
+  caption_pt: "Huddy explorando a Fase 9 (Ruínas do Bosque): terreno em tiles, os contadores de cereja/gema no HUD e o botão de tela cheia"
+- file: question-modal.jpg
+  caption_en: "A question block challenge, rendered as a native Moodle core/modal dialog with the multiple-choice options"
+  caption_pt: "O desafio de um bloco de pergunta, renderizado como um diálogo core/modal nativo do Moodle com as alternativas de múltipla escolha"
+- file: lesson-modal.jpg
+  caption_en: "A mini-lesson block: plain-text explanation shown in the same modal pattern, re-readable at any time"
+  caption_pt: "Um bloco de mini-lição: explicação em texto puro mostrada no mesmo padrão de modal, relegível a qualquer momento"
+- file: intro-overlay.jpg
+  caption_en: "The first-load \"How to play\" overlay, shown once per student and remembered across devices"
+  caption_pt: "O overlay \"Como jogar\" do primeiro carregamento, mostrado uma vez por estudante e lembrado entre dispositivos"
+- file: settings-form.png
+  caption_en: "Teacher-facing activity settings: map selection, the exit-unlock question target and the mini-lessons section"
+  caption_pt: "Configurações da atividade para o professor: seleção de mapa, a meta de perguntas para destravar a saída e a seção de mini-lições"
