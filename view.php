@@ -93,8 +93,34 @@ if (!empty($playerland->intro)) {
     );
 }
 
+$introseen = (bool)get_user_preferences('mod_playerland_introseen', false);
+
 echo \html_writer::start_div('', ['id' => 'playerland-game-wrapper']);
 echo \html_writer::div('', '', ['id' => 'playerland-game-container']);
+
+if (!$introseen) {
+    echo \html_writer::start_div('', [
+        'id' => 'playerland-intro',
+        'role' => 'dialog',
+        'aria-modal' => 'true',
+        'aria-labelledby' => 'playerland-intro-title',
+    ]);
+    echo \html_writer::tag('h2', get_string('introtitle', 'mod_playerland'), ['id' => 'playerland-intro-title']);
+    echo \html_writer::start_tag('ul', ['class' => 'playerland-intro-list']);
+    foreach (['controlmove', 'controljump', 'controlroll', 'controlcrouch', 'controlfullscreen'] as $key) {
+        echo \html_writer::tag('li', get_string($key, 'mod_playerland'));
+    }
+    echo \html_writer::end_tag('ul');
+    echo \html_writer::tag(
+        'button',
+        get_string('gotit', 'mod_playerland'),
+        ['type' => 'button', 'class' => 'btn btn-primary', 'id' => 'playerland-intro-dismiss']
+    );
+    echo \html_writer::end_div();
+
+    $PAGE->requires->js_call_amd('mod_playerland/intro', 'init', [$playerland->id]);
+}
+
 echo \html_writer::end_div();
 
 // Pass config securely via json script tag as per rules.

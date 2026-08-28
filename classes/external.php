@@ -401,4 +401,45 @@ class external extends external_api {
             'complete' => new external_value(PARAM_BOOL, 'Whether the required progress has been reached'),
         ]);
     }
+
+    /**
+     * Parameters for dismiss_intro.
+     *
+     * @return external_function_parameters
+     */
+    public static function dismiss_intro_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'playerlandid' => new external_value(PARAM_INT, 'The playerland instance id'),
+        ]);
+    }
+
+    /**
+     * Marks the first-load controls overlay as seen for the current user. The
+     * preference is plugin-wide (not scoped to this instance); playerlandid is
+     * only used to validate the caller has access to a real playerland context.
+     *
+     * @param int $playerlandid
+     * @return array
+     */
+    public static function dismiss_intro(int $playerlandid): array {
+        $params = self::validate_parameters(self::dismiss_intro_parameters(), [
+            'playerlandid' => $playerlandid,
+        ]);
+
+        self::get_validated_instance((int)$params['playerlandid']);
+        set_user_preference('mod_playerland_introseen', 1);
+
+        return ['status' => true];
+    }
+
+    /**
+     * Returns for dismiss_intro.
+     *
+     * @return external_single_structure
+     */
+    public static function dismiss_intro_returns(): external_single_structure {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'Whether the preference was saved'),
+        ]);
+    }
 }

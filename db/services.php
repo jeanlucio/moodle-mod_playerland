@@ -49,4 +49,12 @@ $functions = [
         'type'        => 'write',
         'ajax'        => true,
     ],
+    'mod_playerland_dismiss_intro' => [
+        'classname'   => 'mod_playerland\external',
+        'methodname'  => 'dismiss_intro',
+        'classpath'   => '',
+        'description' => 'Marks the first-load controls overlay as seen for the current user',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
 ];

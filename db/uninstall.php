@@ -15,17 +15,31 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Version information for playerland.
+ * Pre-uninstallation steps for mod_playerland.
  *
  * @package    mod_playerland
  * @copyright  2026 Jean Lúcio
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Custom uninstallation steps for mod_playerland.
+ *
+ * Every table declared in db/install.xml is dropped automatically by core
+ * (drop_plugin_tables()) and needs no attention here. The one thing core does
+ * not clean up is per-user preferences, since they live in the core
+ * user_preferences table rather than a plugin table.
+ *
+ * @return bool True on success.
+ */
+function xmldb_playerland_uninstall(): bool {
+    global $DB;
 
-$plugin->version   = 2026082805;
-$plugin->requires  = 2024100700;
-$plugin->component = 'mod_playerland';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = 'v1.0.0';
+    $DB->delete_records_select(
+        'user_preferences',
+        $DB->sql_like('name', ':prefix'),
+        ['prefix' => 'mod_playerland_%']
+    );
+
+    return true;
+}
