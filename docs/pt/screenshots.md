@@ -11,9 +11,9 @@ Navegue com as setas, os pontos, ou as teclas esquerda/direita. Clique na imagem
       <div class="carousel-slide{% if forloop.first %} is-active{% endif %}">
         <button type="button" class="screenshot-thumb" data-gallery="mod_playerland"
             data-full="{{ '/assets/img/screenshots/' | append: shot.file | relative_url }}"
-            data-caption="{{ shot.caption_pt }}">
+            data-caption="{{ shot.caption_pt | escape }}">
           <img src="{{ '/assets/img/screenshots/' | append: shot.file | relative_url }}"
-              alt="{{ shot.caption_pt }}" loading="lazy">
+              alt="{{ shot.caption_pt | escape }}" loading="lazy">
         </button>
       </div>
     {% endfor %}

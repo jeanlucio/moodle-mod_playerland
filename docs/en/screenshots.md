@@ -11,9 +11,9 @@ Browse with the arrows, the dots, or the left/right keys. Click the image to zoo
       <div class="carousel-slide{% if forloop.first %} is-active{% endif %}">
         <button type="button" class="screenshot-thumb" data-gallery="mod_playerland"
             data-full="{{ '/assets/img/screenshots/' | append: shot.file | relative_url }}"
-            data-caption="{{ shot.caption_en }}">
+            data-caption="{{ shot.caption_en | escape }}">
           <img src="{{ '/assets/img/screenshots/' | append: shot.file | relative_url }}"
-              alt="{{ shot.caption_en }}" loading="lazy">
+              alt="{{ shot.caption_en | escape }}" loading="lazy">
         </button>
       </div>
     {% endfor %}
