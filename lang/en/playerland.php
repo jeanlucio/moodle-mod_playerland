@@ -27,6 +27,7 @@
 $string['addquestion'] = 'Add question';
 $string['answercorrect'] = 'Correct! Well done.';
 $string['answerincorrect'] = 'Incorrect. Keep trying!';
+$string['collected'] = 'Collected: {$a->cherries} cherries, {$a->gems} gems';
 $string['confirmdeletequestion'] = 'Are you sure you want to delete this question?';
 $string['err_positiveint'] = 'Enter a number greater than zero.';
 $string['error_no_correct_option'] = 'You must select one correct option.';
@@ -70,6 +71,5 @@ $string['questiondeleted'] = 'Question deleted.';
 $string['questionsaved'] = 'Question saved successfully.';
 $string['questionsprogress'] = 'Questions: {$a->resolved}/{$a->target}';
 $string['questiontext'] = 'Question text';
-$string['score'] = 'Points: {$a}';
 $string['targetquestions'] = 'Questions required to unlock the exit';
 $string['targetquestions_help'] = 'The number of distinct questions the student must answer correctly before the exit flag can complete the level. The activity grade is calculated proportionally from this target.';

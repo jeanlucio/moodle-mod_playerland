@@ -67,7 +67,8 @@ define([
             init(data) {
                 this.gameConfig = data.gameConfig;
                 this.isModalOpen = false;
-                this.score = 0;
+                this.cherries = 0;
+                this.gems = 0;
                 this.levelComplete = false;
                 this.blocksResolved = Number(data.gameConfig.blocksresolved || 0);
                 this.targetQuestions = Math.max(1, Number(data.gameConfig.targetquestions || 1));
@@ -296,7 +297,7 @@ define([
              */
             createCollectible(obj, kind) {
                 const item = this.collectibles.create(obj.x, obj.y, 'atlas');
-                item.setData('points', kind === 'gem' ? 50 : 10);
+                item.setData('kind', kind);
                 item.anims.play(kind, true);
             }
 
@@ -461,34 +462,63 @@ define([
             }
 
             /**
-             * Builds the score / question HUD and resolves its localised strings.
+             * Pins a HUD element to a fixed screen point. The main camera is zoomed, and
+             * that zoom still scales and offsets scrollFactor-0 objects, so we place the
+             * element at the world point that lands at (sx, sy) and shrink it back to 1:1.
+             *
+             * @param {Phaser.GameObjects.Components.Transform} obj The HUD object.
+             * @param {number} sx Target screen x in the 800x600 design space.
+             * @param {number} sy Target screen y.
+             * @param {number} depth Render depth (default 20).
+             * @return {Phaser.GameObjects.Components.Transform} The same object.
+             */
+            pinHud(obj, sx, sy, depth = 20) {
+                const cam = this.cameras.main;
+                const inv = 1 / cam.zoom;
+                obj.setScrollFactor(0).setDepth(depth).setScale(obj.scaleX * inv, obj.scaleY * inv);
+                obj.setPosition(
+                    (sx - cam.width * 0.5) * inv + cam.width * 0.5,
+                    (sy - cam.height * 0.5) * inv + cam.height * 0.5
+                );
+                return obj;
+            }
+
+            /**
+             * Builds the collectible / question HUD and resolves its localised strings.
              */
             buildHud() {
                 const style = {
                     fontFamily: 'monospace',
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: '#ffffff',
                     stroke: '#000000',
                     strokeThickness: 3
                 };
-                this.scoreText = this.add.text(6, 6, '', style).setScrollFactor(0).setDepth(20);
-                this.questionsText = this.add.text(6, 22, '', style).setScrollFactor(0).setDepth(20);
+
+                // Cherry and gem counters: the atlas sprite as the icon, a bare number
+                // beside it.
+                this.pinHud(this.add.image(0, 0, 'atlas', 'cherry/cherry-1'), 11, 12);
+                this.cherryText = this.pinHud(this.add.text(0, 0, '0', style), 21, 5);
+                this.pinHud(this.add.image(0, 0, 'atlas', 'gem/gem-1'), 53, 12);
+                this.gemText = this.pinHud(this.add.text(0, 0, '0', style), 63, 5);
+
+                this.questionsText = this.pinHud(this.add.text(0, 0, '', style), 6, 25);
 
                 str.get_strings([
-                    {key: 'score', component: 'mod_playerland'},
+                    {key: 'collected', component: 'mod_playerland'},
                     {key: 'questionsprogress', component: 'mod_playerland'},
                     {key: 'exitlocked', component: 'mod_playerland'},
                     {key: 'exitunlocked', component: 'mod_playerland'},
                     {key: 'levelcomplete', component: 'mod_playerland'},
                     {key: 'pressenter', component: 'mod_playerland'}
-                ]).then(([strScore, strProgress, strLocked, strUnlocked, strComplete, strEnter]) => {
-                    this.strScore = strScore;
+                ]).then(([strCollected, strProgress, strLocked, strUnlocked, strComplete, strEnter]) => {
+                    this.strCollected = strCollected;
                     this.strQuestionsProgress = strProgress;
                     this.strExitLocked = strLocked;
                     this.strExitUnlocked = strUnlocked;
                     this.strLevelComplete = strComplete;
                     this.strPressEnter = strEnter;
-                    this.updateScore();
+                    this.updateCollectibles();
                     this.updateQuestionProgress();
                     return null;
                 }).catch(Notification.exception);
@@ -498,14 +528,15 @@ define([
              * Adds the corner fullscreen toggle and binds the F key.
              */
             buildFullscreenButton() {
-                this.fsButton = this.add.text(794, 6, '⛶', {
+                this.fsButton = this.add.text(0, 0, '⛶', {
                     fontFamily: 'monospace',
                     fontSize: '20px',
                     color: '#ffffff',
                     stroke: '#000000',
                     strokeThickness: 4
-                }).setOrigin(1, 0).setScrollFactor(0).setDepth(40)
-                    .setInteractive({useHandCursor: true});
+                }).setOrigin(1, 0);
+                this.pinHud(this.fsButton, 794, 6, 40);
+                this.fsButton.setInteractive({useHandCursor: true});
 
                 this.fsButton.on('pointerover', () => this.fsButton.setColor('#ffd54a'));
                 this.fsButton.on('pointerout', () => this.fsButton.setColor('#ffffff'));
@@ -515,13 +546,14 @@ define([
                 this.input.keyboard.addCapture('F');
 
                 str.get_string('fullscreen', 'mod_playerland').then(label => {
-                    this.fsHint = this.add.text(794, 30, label, {
+                    this.fsHint = this.add.text(0, 0, label, {
                         fontFamily: 'monospace',
                         fontSize: '9px',
                         color: '#ffffff',
                         stroke: '#000000',
                         strokeThickness: 3
-                    }).setOrigin(1, 0).setScrollFactor(0).setDepth(40);
+                    }).setOrigin(1, 0);
+                    this.pinHud(this.fsHint, 794, 30, 40);
                     this.time.delayedCall(4000, () => {
                         this.tweens.add({targets: this.fsHint, alpha: 0, duration: 600});
                     });
@@ -561,11 +593,14 @@ define([
             }
 
             /**
-             * Refreshes the score HUD using the localised template.
+             * Refreshes the cherry and gem counters.
              */
-            updateScore() {
-                if (this.strScore) {
-                    this.scoreText.setText(this.strScore.replace('{$a}', this.score));
+            updateCollectibles() {
+                if (this.cherryText) {
+                    this.cherryText.setText(String(this.cherries));
+                }
+                if (this.gemText) {
+                    this.gemText.setText(String(this.gems));
                 }
             }
 
@@ -1078,14 +1113,18 @@ define([
             }
 
             /**
-             * Collects a cherry or gem: adds points, plays a sparkle and removes the item.
+             * Collects a cherry or gem: bumps its counter, plays a sparkle, removes it.
              *
              * @param {Phaser.GameObjects.Sprite} player The player sprite.
              * @param {Phaser.GameObjects.Sprite} item The collectible touched.
              */
             collectItem(player, item) {
-                this.score += item.getData('points');
-                this.updateScore();
+                if (item.getData('kind') === 'gem') {
+                    this.gems += 1;
+                } else {
+                    this.cherries += 1;
+                }
+                this.updateCollectibles();
                 const sparkle = this.add.sprite(item.x, item.y, 'atlas').setDepth(10);
                 sparkle.anims.play('item-feedback');
                 sparkle.once('animationcomplete', () => sparkle.destroy());
@@ -1165,9 +1204,10 @@ define([
                 this.player.anims.play('player-idle', true);
 
                 const view = this.cameras.main.worldView;
-                const message = this.strLevelComplete + '\n' +
-                    this.strScore.replace('{$a}', this.score) + '\n' +
-                    this.strPressEnter;
+                const collected = this.strCollected
+                    .replace('{$a->cherries}', this.cherries)
+                    .replace('{$a->gems}', this.gems);
+                const message = this.strLevelComplete + '\n' + collected + '\n' + this.strPressEnter;
                 this.add.text(view.centerX, view.centerY, message, {
                     fontFamily: 'monospace',
                     fontSize: '12px',

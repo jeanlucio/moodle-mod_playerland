@@ -27,6 +27,7 @@
 $string['addquestion'] = 'Adicionar pergunta';
 $string['answercorrect'] = 'Correto! Muito bem.';
 $string['answerincorrect'] = 'Incorreto. Continue tentando!';
+$string['collected'] = 'Coletados: {$a->cherries} cerejas, {$a->gems} gemas';
 $string['confirmdeletequestion'] = 'Tem certeza que deseja excluir esta pergunta?';
 $string['err_positiveint'] = 'Informe um número maior que zero.';
 $string['error_no_correct_option'] = 'Você deve selecionar uma opção correta.';
@@ -70,6 +71,5 @@ $string['questiondeleted'] = 'Pergunta excluída.';
 $string['questionsaved'] = 'Pergunta salva com sucesso.';
 $string['questionsprogress'] = 'Perguntas: {$a->resolved}/{$a->target}';
 $string['questiontext'] = 'Texto da pergunta';
-$string['score'] = 'Pontos: {$a}';
 $string['targetquestions'] = 'Perguntas necessárias para destravar a saída';
 $string['targetquestions_help'] = 'O número de perguntas distintas que o estudante precisa responder corretamente antes que a bandeira de saída possa concluir a fase. A nota da atividade é calculada proporcionalmente a partir dessa meta.';
