@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Level 1 - A Trilha.
 
-The gentlest possible start: walk, collect cherries, hit one low question block,
-make one small jump over a shallow pit, meet the first (leashed) opossum, reach
-the burrow. No hazards, nothing that can kill.
+The gentlest possible start: walk, collect cherries, read one mini-lesson block,
+answer one low question block, make one small jump over a shallow pit, meet the
+first (leashed) opossum, reach the burrow. No hazards, nothing that can kill.
 
-Recommended activity setting: "Perguntas necessarias" = 1.
+The lesson block only appears in-game if the teacher fills "Mini-licao 1" on the
+activity form. Recommended activity setting: "Perguntas necessarias" = 1.
 
     python3 tools/level001.py        # writes assets/maps/map_level001.json
 """
@@ -16,16 +17,17 @@ NAME = 'map_level001.json'
 
 SIGN_TEXTS = [
     'Setas para andar, ESPACO para pular. Pegue as cerejas!',
+    'Bata no bloco azul (!) por baixo para ler a licao.',
 ]
 
-# ROOM A - flat trail: the sign, a cherry trail, one easy question block.
+# ROOM A - flat trail: controls sign, cherries, the lesson block, then a question.
 ROOM_A = [
     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",  # 0-14
     "             ccc",  # 15
-    "              ?",  # 16
+    "          L      ?",  # 16  lesson (read) then question (answer)
     "",  # 17
     "   @",  # 18
-    "       1            c c c",  # 19
+    "       1  2         c c c",  # 19  sign 1 = controls, sign 2 points at the lesson block
     "========================================",  # 20
 ]
 

@@ -61,6 +61,11 @@ $config = [
     'map' => $playerland->map,
     'targetquestions' => max(1, (int)($playerland->targetquestions ?? 1)),
     'blocksresolved' => 0,
+    'lessons' => [
+        (string)($playerland->lesson1 ?? ''),
+        (string)($playerland->lesson2 ?? ''),
+        (string)($playerland->lesson3 ?? ''),
+    ],
 ];
 
 $attempt = $DB->get_record('playerland_atmpt', ['playerlandid' => $playerland->id, 'userid' => $USER->id]);

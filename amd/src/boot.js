@@ -88,6 +88,16 @@ define([], function() {
             ];
             this.load.svg('question_block', 'data:image/svg+xml;base64,' + btoa(svgParts.join('')));
 
+            // Lesson block: blue "!" so the colour reads as "repeatable" (like the taxonomy)
+            // and the symbol distinguishes "read" from the "?" of "answer".
+            const lessonParts = [
+                '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">',
+                '<rect width="32" height="32" fill="#2f7fd0" stroke="#1c4f86" stroke-width="4"/>',
+                '<rect x="13" y="6" width="6" height="12" fill="#fff"/>',
+                '<rect x="13" y="21" width="6" height="5" fill="#fff"/></svg>'
+            ];
+            this.load.svg('lesson_block', 'data:image/svg+xml;base64,' + btoa(lessonParts.join('')));
+
             // Exit flag (temporary placeholder art, generated as an SVG like the question block).
             const flagParts = [
                 '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="24">',

@@ -71,6 +71,7 @@ define([
                 this.gems = 0;
                 this.levelComplete = false;
                 this.blocksResolved = Number(data.gameConfig.blocksresolved || 0);
+                this.lessons = Array.isArray(data.gameConfig.lessons) ? data.gameConfig.lessons : [];
                 this.targetQuestions = Math.max(1, Number(data.gameConfig.targetquestions || 1));
                 this.exitUnlocked = this.blocksResolved >= this.targetQuestions;
                 this.exitNotice = null;
@@ -167,6 +168,7 @@ define([
 
                 // Groups populated from the "objects" layer.
                 this.questionBlocks = this.physics.add.staticGroup();
+                this.lessonBlocks = this.physics.add.staticGroup();
                 this.collectibles = this.physics.add.group({allowGravity: false});
                 this.enemies = this.physics.add.group();
                 this.hazards = this.physics.add.staticGroup();
@@ -181,6 +183,7 @@ define([
 
                 // Collisions and overlaps.
                 this.physics.add.collider(this.player, this.questionBlocks, this.hitQuestionBlock, null, this);
+                this.physics.add.collider(this.player, this.lessonBlocks, this.hitLessonBlock, null, this);
                 this.physics.add.collider(this.enemies, layer);
                 this.physics.add.collider(this.enemies, this.crumbleBlocks);
                 this.physics.add.collider(this.player, this.movingPlatforms);
@@ -264,6 +267,7 @@ define([
                     cherry: o => this.createCollectible(o, 'cherry'),
                     gem: o => this.createCollectible(o, 'gem'),
                     question: o => this.createQuestionBlock(o),
+                    lesson: o => this.createLessonBlock(o),
                     opossum: o => this.spawnEnemy(o.x, o.y, 'opossum'),
                     eagle: o => this.spawnEnemy(o.x, o.y, 'eagle'),
                     frog: o => this.spawnEnemy(o.x, o.y, 'frog'),
@@ -310,6 +314,24 @@ define([
                 const block = this.questionBlocks.create(obj.x, obj.y, 'question_block');
                 block.setScale(0.5);
                 block.refreshBody();
+            }
+
+            /**
+             * A lesson block ("!"), hit from below to read a teacher-authored mini-lesson.
+             * Property n (1-3) picks which lesson text. It is never spent - only dimmed
+             * once read.
+             *
+             * @param {object} obj The Tiled object.
+             */
+            createLessonBlock(obj) {
+                const n = Math.max(1, Number(this.objectProp(obj, 'n', 1)));
+                if (!(this.lessons[n - 1] || '').trim()) {
+                    return; // No lesson authored for this slot: don't place a dead block.
+                }
+                const block = this.lessonBlocks.create(obj.x, obj.y, 'lesson_block');
+                block.setScale(0.5);
+                block.refreshBody();
+                block.setData('n', n);
             }
 
             /**
@@ -1430,6 +1452,79 @@ define([
                 enemy.body.enable = false;
                 enemy.anims.play('enemy-death');
                 enemy.once('animationcomplete', () => enemy.destroy());
+            }
+
+            /**
+             * Opens the mini-lesson modal when a lesson block is hit from below. The
+             * block is never spent, only dimmed after the first read.
+             *
+             * @param {Phaser.GameObjects.Sprite} player The player sprite.
+             * @param {Phaser.GameObjects.Sprite} block The lesson block.
+             */
+            async hitLessonBlock(player, block) {
+                if (!(player.body.blocked.up || player.body.touching.up)) {
+                    return;
+                }
+                if (this.isModalOpen || this.isDying) {
+                    return;
+                }
+                const text = (this.lessons[block.getData('n') - 1] || '').trim();
+                if (text === '') {
+                    return;
+                }
+
+                this.isModalOpen = true;
+                player.setVelocityY(50);
+                this.celebrateBlock(block);
+
+                const self = this;
+                const [strLesson, strContinue] = await str.get_strings([
+                    {key: 'lesson', component: 'mod_playerland'},
+                    {key: 'continue', component: 'core'}
+                ]);
+
+                await new Promise(resolve => self.time.delayedCall(150, resolve));
+                this.physics.pause();
+                this.anims.pauseAll();
+
+                const resume = () => {
+                    self.physics.resume();
+                    self.anims.resumeAll();
+                    self.isModalOpen = false;
+                };
+
+                try {
+                    const modal = await Modal.create({
+                        title: strLesson,
+                        body: '<p class="mod-playerland-lessontext"></p>' +
+                            '<button type="button" class="btn btn-primary mt-2 w-100" id="pl-lesson-done">' +
+                            strContinue + '</button>',
+                        large: true,
+                        removeOnClose: true,
+                    });
+                    modal.show();
+                    const root = modal.getRoot();
+                    root.find('.modal-dialog').addClass('modal-dialog-centered');
+                    // .text() so the plain-text lesson is never treated as HTML.
+                    root.find('.mod-playerland-lessontext').text(text);
+
+                    block.setData('read', true);
+                    block.setTint(0x1c4f86);
+
+                    root.on('click', '#pl-lesson-done', () => {
+                        resume();
+                        modal.hide();
+                        modal.destroy();
+                    });
+                    root.on('modal:hidden', () => {
+                        if (self.isModalOpen) {
+                            resume();
+                        }
+                    });
+                } catch (err) {
+                    resume();
+                    Notification.exception(err);
+                }
             }
 
             async hitQuestionBlock(player, block) {

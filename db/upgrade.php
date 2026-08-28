@@ -83,5 +83,18 @@ function xmldb_playerland_upgrade(int $oldversion): bool {
         upgrade_mod_savepoint(true, 2026082701, 'playerland');
     }
 
+    if ($oldversion < 2026082803) {
+        $table = new xmldb_table('playerland');
+        $previous = 'grade';
+        foreach (['lesson1', 'lesson2', 'lesson3'] as $name) {
+            $field = new xmldb_field($name, XMLDB_TYPE_TEXT, null, null, null, null, null, $previous);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            $previous = $name;
+        }
+        upgrade_mod_savepoint(true, 2026082803, 'playerland');
+    }
+
     return true;
 }

@@ -18,7 +18,7 @@ Tile GIDs (firstgid = 1, so GID = tile-id + 1):
 
 Tile chars:  =  grass    #  dirt    -  beam (one-way)    W  brick    H  vine/ladder
 Marker chars:
-    @ spawn      E exit        ? question    c cherry     g gem
+    @ spawn      E exit        ? question    L lesson (n=1)   c cherry   g gem
     o opossum    e eagle       f frog        x spike up   v spike down
     P platform (horizontal)    p platform (vertical)      C crumbling platform
     B crate      K crank       D door        S checkpoint
@@ -58,6 +58,7 @@ MARKERS = {
     '@': ('spawn', 'bottom', {}),
     'E': ('exit', 'bottom', {}),
     '?': ('question', 'center', {}),
+    'L': ('lesson', 'center', {'n': 1}),
     'c': ('cherry', 'center', {}),
     'g': ('gem', 'center', {}),
     'o': ('opossum', 'bottom', {}),
@@ -299,7 +300,7 @@ def render(tilemap, cols=None):
         'spawn': '@', 'exit': 'E', 'question': '?', 'cherry': 'c', 'gem': 'g',
         'opossum': 'o', 'eagle': 'e', 'frog': 'f', 'spike': 'x', 'platform': 'P',
         'crumble': 'C', 'crate': 'B', 'crank': 'K', 'door': 'D', 'checkpoint': 'S',
-        'sign': 'i',
+        'sign': 'i', 'lesson': 'L',
     }
     grid = [[legend.get(d[r * w + c], '.') for c in range(w)] for r in range(h)]
     for obj in tilemap['layers'][1]['objects']:

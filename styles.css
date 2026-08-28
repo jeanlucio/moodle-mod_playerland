@@ -54,3 +54,19 @@
 .path-mod-playerland #playerland-game-container canvas {
     display: block;
 }
+
+/* Plain-text mini-lesson body inside the in-game modal (hoisted to <body>). */
+.path-mod-playerland .mod-playerland-lessontext {
+    white-space: pre-wrap;
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+/* Live character counter under each mini-lesson field on the activity form.
+   Injected by the lessoncounter AMD module; the .mform ancestor keeps it scoped. */
+.mform .mod-playerland-lessoncounter {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--gray-700, #495057);
+}

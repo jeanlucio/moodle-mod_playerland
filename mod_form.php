@@ -30,12 +30,20 @@ require_once($CFG->dirroot . '/course/moodleform_mod.php');
  * Form for playerland instances.
  */
 class mod_playerland_mod_form extends moodleform_mod {
+    /** @var int Number of mini-lesson slots. */
+    const LESSON_SLOTS = 3;
+
+    /** @var int Maximum characters for a mini-lesson. */
+    const LESSON_MAXLENGTH = 400;
+
     /**
      * Defines the form.
      *
      * @return void
      */
     public function definition(): void {
+        global $PAGE;
+
         $mform = $this->_form;
 
         // General settings.
@@ -72,6 +80,30 @@ class mod_playerland_mod_form extends moodleform_mod {
         $mform->addHelpButton('targetquestions', 'targetquestions', 'mod_playerland');
         $mform->addRule('targetquestions', get_string('err_positiveint', 'mod_playerland'), 'numeric', null, 'client');
 
+        // Mini-lessons: up to three short plain-text explanations, shown in-game by a
+        // lesson block ("!"). Placed in the map by a "lesson" marker with n = 1..3.
+        $mform->addElement('header', 'lessons', get_string('lessons', 'mod_playerland'));
+        $mform->addElement('static', 'lessonsdesc', '', get_string('lessons_help', 'mod_playerland'));
+
+        $lessonfields = [];
+        for ($slot = 1; $slot <= self::LESSON_SLOTS; $slot++) {
+            $name = 'lesson' . $slot;
+            $lessonfields[] = $name;
+            $mform->addElement(
+                'textarea',
+                $name,
+                get_string('lessonnum', 'mod_playerland', $slot),
+                ['rows' => 3, 'maxlength' => self::LESSON_MAXLENGTH]
+            );
+            $mform->setType($name, PARAM_TEXT);
+        }
+
+        $PAGE->requires->js_call_amd(
+            'mod_playerland/lessoncounter',
+            'init',
+            [$lessonfields, self::LESSON_MAXLENGTH]
+        );
+
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
@@ -93,6 +125,13 @@ class mod_playerland_mod_form extends moodleform_mod {
 
         if ((int)($data['targetquestions'] ?? 0) < 1) {
             $errors['targetquestions'] = get_string('err_positiveint', 'mod_playerland');
+        }
+
+        for ($slot = 1; $slot <= self::LESSON_SLOTS; $slot++) {
+            $name = 'lesson' . $slot;
+            if (core_text::strlen($data[$name] ?? '') > self::LESSON_MAXLENGTH) {
+                $errors[$name] = get_string('err_lessontoolong', 'mod_playerland', self::LESSON_MAXLENGTH);
+            }
         }
 
         return $errors;
