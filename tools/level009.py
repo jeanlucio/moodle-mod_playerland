@@ -78,7 +78,7 @@ ROOM_4 = [
     "              W                   ",  # 9
     "              W                   ",  # 10
     "     K   5    W                   ",  # 11
-    "    H=====    W                   ",  # 12
+    "    H-----    W                   ",  # 12  crank ledge (platform, not ground)
     "    H         W                   ",  # 13
     "    H         W                   ",  # 14
     "    H         W          g        ",  # 15
@@ -95,7 +95,7 @@ ROOM_5 = [
     "                e                   ",  # 8
     "", "", "", "", "", "",  # 9-14
     "     S                              ",  # 15
-    "   ======  C   C   C   C    ? g     ",  # 16
+    "   ------  C   C   C   C    ? g     ",  # 16  rest ledge (platform, not ground)
     "                             -----  ",  # 17
     "",  # 18
     "            x x x x x x          E  ",  # 19

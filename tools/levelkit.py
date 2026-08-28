@@ -102,12 +102,17 @@ def _assemble(rooms, hollow_rooms):
     for index, (room, width) in enumerate(zip(rooms, widths)):
         hollow = index in hollow_rooms
         col_room.extend([index] * width)
-        for r in range(ROOM_HEIGHT):
-            for c in range(width):
+        for c in range(width):
+            # Solid dirt fills downward from any grass tile ('=') until it meets
+            # something the room drew, so a floor or a lower ledge closes itself.
+            # Platforms use '-' precisely so they do not grow a column below.
+            filling = False
+            for r in range(ROOM_HEIGHT):
                 ch = _room_char(room, r, c)
                 if ch != ' ':
                     grid[r][base + c] = ch
-                elif not hollow and r > FLOOR_ROW and grid[FLOOR_ROW][base + c] == '=':
+                    filling = not hollow and ch == '='
+                elif filling:
                     grid[r][base + c] = '#'
         base += width
 
