@@ -24,3 +24,5 @@ Thumbs.db
 # Python bytecode from the level-builder tools.
 __pycache__/
 *.pyc
+
+SCOPE.md
