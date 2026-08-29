@@ -9,9 +9,8 @@ Este projeto é licenciado sob a **GNU General Public License v3 (GPLv3)**.
 * **Motor do jogo:** [Phaser](https://phaser.io/) — Licença MIT, declarada em
   `thirdpartylibs.xml`.
 * **Pixel art:** o pacote de assets *Sunny Land* por **Ansimuz**, distribuído sob uma licença de
-  domínio público / estilo CC0 no itch.io. Nenhuma cópia local desse arquivo de licença é
-  publicada neste repositório ainda; trate a própria página do pacote no itch.io como a fonte
-  oficial dos termos até que uma seja adicionada.
+  domínio público / estilo CC0 no itch.io — compatível com a GPLv3. A própria página do pacote no
+  itch.io é a fonte oficial dos termos.
 
 ## Suporte
 
