@@ -26,9 +26,19 @@
  * Indicates API features that the playerland module supports.
  *
  * @param string $feature The feature to check.
- * @return bool|null True if supported, false if unsupported, null if unknown.
+ * @return mixed True if module supports feature, false if not, a purpose string for
+ *     FEATURE_MOD_PURPOSE/FEATURE_MOD_OTHERPURPOSE, null if doesn't know.
  */
-function playerland_supports(string $feature): bool|null {
+function playerland_supports(string $feature): mixed {
+    // FEATURE_MOD_OTHERPURPOSE only exists from Moodle 5.1 onwards (MDL-85598); this
+    // plugin also targets Moodle 4.5, where referencing the undefined constant as a
+    // switch case label would still be a fatal error, guard or not — checked ahead of
+    // the switch instead. Lets the activity chooser list this activity under both its
+    // primary purpose (interactive content) and this secondary one (assessment).
+    if (defined('FEATURE_MOD_OTHERPURPOSE') && $feature === FEATURE_MOD_OTHERPURPOSE) {
+        return MOD_PURPOSE_ASSESSMENT;
+    }
+
     switch ($feature) {
         case FEATURE_MOD_INTRO:
             return true;
@@ -42,6 +52,8 @@ function playerland_supports(string $feature): bool|null {
             return true;
         case FEATURE_GRADE_OUTCOMES:
             return true;
+        case FEATURE_MOD_PURPOSE:
+            return MOD_PURPOSE_INTERACTIVECONTENT;
         case FEATURE_BACKUP_MOODLE2:
             return false;
         default:

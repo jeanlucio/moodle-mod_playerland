@@ -40,9 +40,12 @@ final class lib_supports_test extends \basic_testcase {
 
     /**
      * Known features return their declared support value, and an unrecognised feature
-     * returns null. Also guards against a fatal on any FEATURE_* constant referenced
-     * unconditionally that a newer Moodle branch might not define yet, since PHP
-     * evaluates the whole switch body on every call regardless of which case matches.
+     * returns null. PHP evaluates every branch of the function body regardless of
+     * which key is actually being looked up, so this alone would fatal if any
+     * referenced constant (e.g. FEATURE_MOD_OTHERPURPOSE, only defined from Moodle 5.1
+     * onwards) were ever used unconditionally instead of behind a defined() guard —
+     * see test_supports_secondary_purpose_when_available() for that constant
+     * specifically.
      *
      * @return void
      */
@@ -53,7 +56,24 @@ final class lib_supports_test extends \basic_testcase {
         $this->assertFalse(playerland_supports(FEATURE_COMPLETION_HAS_RULES));
         $this->assertTrue(playerland_supports(FEATURE_GRADE_HAS_GRADE));
         $this->assertTrue(playerland_supports(FEATURE_GRADE_OUTCOMES));
+        $this->assertSame(MOD_PURPOSE_INTERACTIVECONTENT, playerland_supports(FEATURE_MOD_PURPOSE));
         $this->assertFalse(playerland_supports(FEATURE_BACKUP_MOODLE2));
         $this->assertNull(playerland_supports('unknown_feature'));
+    }
+
+    /**
+     * FEATURE_MOD_OTHERPURPOSE (MDL-85598) lets the activity chooser list this
+     * activity under a second category (assessment) alongside its primary one
+     * (interactive content) — only exists from Moodle 5.1 onwards, so the value is
+     * only checked when the constant is actually defined on whichever Moodle branch
+     * this test happens to run against.
+     *
+     * @return void
+     */
+    public function test_supports_secondary_purpose_when_available(): void {
+        if (!defined('FEATURE_MOD_OTHERPURPOSE')) {
+            $this->markTestSkipped('FEATURE_MOD_OTHERPURPOSE does not exist on this Moodle branch.');
+        }
+        $this->assertSame(MOD_PURPOSE_ASSESSMENT, playerland_supports(FEATURE_MOD_OTHERPURPOSE));
     }
 }
