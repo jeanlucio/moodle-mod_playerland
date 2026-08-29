@@ -75,8 +75,6 @@ if ($attempt) {
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->heading(format_string($playerland->name));
-
 if (has_capability('mod/playerland:manage', $context)) {
     $manageurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cm->id]);
     echo html_writer::div(
