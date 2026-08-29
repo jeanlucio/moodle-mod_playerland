@@ -38,6 +38,13 @@ define([], function() {
 
         preload() {
             const assetsUrl = this.gameConfig.assetsurl;
+            // Cache-busting suffix for the static assets below (tileset, backgrounds, atlases,
+            // audio). It changes only when the plugin version is bumped, so browsers keep
+            // caching these normally between releases instead of refetching on every page load
+            // — unlike the map file just below, which intentionally always fetches fresh via
+            // Date.now(). Without this, a browser that cached an older atlas-props.json can end
+            // up paired with a newer play.js that requests frames the cached JSON doesn't have.
+            const rev = '?rev=' + (this.gameConfig.assetrev || 0);
 
             // Display loading progress
             const width = this.cameras.main.width;
@@ -58,26 +65,26 @@ define([], function() {
 
             // Load Tilemap based on config.
             const mapFile = this.gameConfig.map || 'map.json';
-            this.load.image('tileset', assetsUrl + '/environment/tileset.png');
+            this.load.image('tileset', assetsUrl + '/environment/tileset.png' + rev);
             this.load.tilemapTiledJSON('map', assetsUrl + '/maps/' + mapFile + '?cb=' + Date.now());
 
             // Load Backgrounds
-            this.load.image('bg-back', assetsUrl + '/environment/back.png');
-            this.load.image('bg-middle', assetsUrl + '/environment/middle.png');
+            this.load.image('bg-back', assetsUrl + '/environment/back.png' + rev);
+            this.load.image('bg-middle', assetsUrl + '/environment/middle.png' + rev);
 
             // Load Atlas (sprites)
-            this.load.atlas('atlas', assetsUrl + '/atlas/atlas.png', assetsUrl + '/atlas/atlas.json');
+            this.load.atlas('atlas', assetsUrl + '/atlas/atlas.png' + rev, assetsUrl + '/atlas/atlas.json' + rev);
 
             // Load the props atlas: spikes, crates, platforms, crank, door, decorative pieces.
             // Every frame here is a single static image referenced by name from PlayScene.
             this.load.atlas(
                 'props',
-                assetsUrl + '/atlas/atlas-props.png',
-                assetsUrl + '/atlas/atlas-props.json'
+                assetsUrl + '/atlas/atlas-props.png' + rev,
+                assetsUrl + '/atlas/atlas-props.json' + rev
             );
 
             // Background music loop. Playback is opt-in and starts muted-friendly from PlayScene.
-            this.load.audio('music', assetsUrl + '/sound/platformer_level03_loop.ogg');
+            this.load.audio('music', assetsUrl + '/sound/platformer_level03_loop.ogg' + rev);
 
             // Question block (temporarily generating an SVG for it since it's not in the atlas)
             const svgParts = [

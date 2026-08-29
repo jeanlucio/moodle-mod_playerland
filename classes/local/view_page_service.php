@@ -68,6 +68,7 @@ class view_page_service {
         $config = [
             'id' => (int)$playerland->id,
             'assetsurl' => (new moodle_url('/mod/playerland/assets'))->out(false),
+            'assetrev' => (int)get_config('mod_playerland', 'version'),
             'levels' => (int)$playerland->levels,
             'map' => $playerland->map,
             'targetquestions' => max(1, (int)($playerland->targetquestions ?? 1)),
