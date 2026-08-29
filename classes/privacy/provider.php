@@ -44,7 +44,11 @@ use core_privacy\local\request\writer;
 class provider implements
     \core_privacy\local\metadata\provider,
     \core_privacy\local\request\core_userlist_provider,
-    \core_privacy\local\request\plugin\provider {
+    \core_privacy\local\request\plugin\provider,
+    \core_privacy\local\request\user_preference_provider {
+    /** @var string Name of the site-wide user preference for the first-load intro overlay. */
+    const INTROSEEN_PREFERENCE = 'mod_playerland_introseen';
+
     /**
      * Returns metadata about personal data stored by this plugin.
      *
@@ -66,7 +70,32 @@ class provider implements
             'timecreated' => 'privacy:metadata:timecreated',
         ], 'privacy:metadata:playerland_ans');
 
+        $collection->add_user_preference(
+            self::INTROSEEN_PREFERENCE,
+            'privacy:metadata:preference:introseen'
+        );
+
         return $collection;
+    }
+
+    /**
+     * Export the site-wide "how to play" intro overlay preference for the given user.
+     *
+     * @param int $userid The user id to export preferences for.
+     */
+    #[\Override]
+    public static function export_user_preferences(int $userid): void {
+        $seen = get_user_preferences(self::INTROSEEN_PREFERENCE, null, $userid);
+        if ($seen === null) {
+            return;
+        }
+
+        writer::export_user_preference(
+            'mod_playerland',
+            self::INTROSEEN_PREFERENCE,
+            transform::yesno($seen),
+            get_string('privacy:metadata:preference:introseen', 'mod_playerland')
+        );
     }
 
     /**

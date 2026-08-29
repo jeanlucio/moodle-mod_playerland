@@ -75,6 +75,7 @@ $string['privacy:metadata:blocksresolved'] = 'O número de blocos que o usuário
 $string['privacy:metadata:currentlevel'] = 'O nível que o usuário alcançou.';
 $string['privacy:metadata:playerland_ans'] = 'Armazena as perguntas distintas que cada estudante respondeu corretamente numa atividade PlayerLand.';
 $string['privacy:metadata:playerland_atmpt'] = 'Armazena o progresso de cada estudante numa atividade PlayerLand.';
+$string['privacy:metadata:preference:introseen'] = 'Se a introdução automática de como jogar já foi exibida a você uma vez, em qualquer atividade PlayerLand deste site.';
 $string['privacy:metadata:questionid'] = 'O ID da pergunta respondida corretamente pelo usuário.';
 $string['privacy:metadata:timecreated'] = 'O momento em que este registro foi criado.';
 $string['privacy:metadata:timemodified'] = 'O momento em que este registro foi modificado pela última vez.';

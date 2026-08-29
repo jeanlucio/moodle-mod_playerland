@@ -134,6 +134,52 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
     }
 
     /**
+     * Tests that get_metadata declares the first-load intro overlay preference.
+     *
+     * @return void
+     */
+    public function test_get_metadata_declares_intro_preference(): void {
+        $collection = provider::get_metadata(new collection('mod_playerland'));
+        $keys = array_map(fn($item) => $item->get_name(), $collection->get_collection());
+
+        $this->assertContains(provider::INTROSEEN_PREFERENCE, $keys);
+    }
+
+    /**
+     * A user who never had the intro preference set exports no preference data.
+     *
+     * @return void
+     */
+    public function test_export_user_preferences_no_pref(): void {
+        $user = $this->getDataGenerator()->create_user();
+
+        provider::export_user_preferences($user->id);
+
+        $writer = writer::with_context(\context_system::instance());
+        $this->assertFalse($writer->has_any_data());
+    }
+
+    /**
+     * A user who has seen the intro exports exactly that one preference, under the
+     * mod_playerland component.
+     *
+     * @return void
+     */
+    public function test_export_user_preferences_seen(): void {
+        $user = $this->getDataGenerator()->create_user();
+        set_user_preference(provider::INTROSEEN_PREFERENCE, 1, $user->id);
+
+        provider::export_user_preferences($user->id);
+
+        $writer = writer::with_context(\context_system::instance());
+        $this->assertTrue($writer->has_any_data());
+
+        $prefs = (array) $writer->get_user_preferences('mod_playerland');
+        $this->assertCount(1, $prefs);
+        $this->assertArrayHasKey(provider::INTROSEEN_PREFERENCE, $prefs);
+    }
+
+    /**
      * Tests that get_contexts_for_userid finds the context via an attempt row.
      *
      * @return void
