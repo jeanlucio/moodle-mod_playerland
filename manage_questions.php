@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/playerland/lib.php');
 require_once($CFG->dirroot . '/mod/playerland/classes/form/question_form.php');
 
+use mod_playerland\local\question_list_service;
+
 $cmid = required_param('id', PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
 $questionid = optional_param('qid', 0, PARAM_INT);
@@ -144,59 +146,8 @@ if ($action === 'add' || $action === 'edit') {
 
     $mform->display();
 } else {
-    // List existing questions.
-    $questions = $DB->get_records('playerland_q', ['playerlandid' => $playerland->id], 'id ASC');
-
-    $addurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cmid, 'action' => 'add']);
-    echo html_writer::link($addurl, get_string('addquestion', 'mod_playerland'), ['class' => 'btn btn-primary mb-3']);
-
-    if (empty($questions)) {
-        echo $OUTPUT->notification(get_string('noquestions', 'mod_playerland'), 'info');
-    } else {
-        $topiclabels = [
-            0 => get_string('questiontopicgeneral', 'mod_playerland'),
-            1 => get_string('lessonnum', 'mod_playerland', 1),
-            2 => get_string('lessonnum', 'mod_playerland', 2),
-            3 => get_string('lessonnum', 'mod_playerland', 3),
-        ];
-
-        $table = new html_table();
-        $table->head = [
-            get_string('question', 'mod_playerland'),
-            get_string('questiontopic', 'mod_playerland'),
-            get_string('actions'),
-        ];
-        $table->data = [];
-
-        foreach ($questions as $q) {
-            $editurl = new moodle_url(
-                '/mod/playerland/manage_questions.php',
-                ['id' => $cmid, 'action' => 'edit', 'qid' => $q->id]
-            );
-            $delurl = new moodle_url(
-                '/mod/playerland/manage_questions.php',
-                ['id' => $cmid, 'action' => 'delete', 'qid' => $q->id, 'sesskey' => sesskey()]
-            );
-
-            $actions = html_writer::link($editurl, $OUTPUT->pix_icon('t/edit', get_string('edit'))) . '&nbsp;';
-            $actions .= html_writer::link(
-                $delurl,
-                $OUTPUT->pix_icon('t/delete', get_string('delete')),
-                ['data-confirm' => get_string('confirmdeletequestion', 'mod_playerland')]
-            );
-
-            $table->data[] = [
-                format_text($q->questiontext, $q->questionformat),
-                $topiclabels[$q->topic] ?? $topiclabels[0],
-                $actions,
-            ];
-        }
-
-        echo html_writer::table($table);
-    }
-
-    $backurl = new moodle_url('/mod/playerland/view.php', ['id' => $cmid]);
-    echo html_writer::link($backurl, get_string('back', 'core'), ['class' => 'btn btn-secondary mt-3']);
+    $listcontext = question_list_service::build_list_context($playerland, $cmid, $OUTPUT);
+    echo $OUTPUT->render_from_template('mod_playerland/manage_questions', $listcontext);
 }
 
 echo $OUTPUT->footer();

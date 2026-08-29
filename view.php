@@ -26,6 +26,8 @@ require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
+use mod_playerland\local\view_page_service;
+
 $id = required_param('id', PARAM_INT); // Course module ID.
 
 $cm = get_coursemodule_from_id('playerland', $id, 0, false, MUST_EXIST);
@@ -53,84 +55,17 @@ $PAGE->set_url('/mod/playerland/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($playerland->name));
 $PAGE->set_heading(format_string($course->fullname));
 
-// We need an AMD module to load Phaser and start the game.
-$config = [
-    'id' => $playerland->id,
-    'assetsurl' => (new moodle_url('/mod/playerland/assets'))->out(false),
-    'levels' => $playerland->levels,
-    'map' => $playerland->map,
-    'targetquestions' => max(1, (int)($playerland->targetquestions ?? 1)),
-    'blocksresolved' => 0,
-    'lessons' => [
-        (string)($playerland->lesson1 ?? ''),
-        (string)($playerland->lesson2 ?? ''),
-        (string)($playerland->lesson3 ?? ''),
-    ],
-];
+$templatecontext = view_page_service::build_page_context($cm, $playerland, $context, (int)$USER->id);
 
-$attempt = $DB->get_record('playerland_atmpt', ['playerlandid' => $playerland->id, 'userid' => $USER->id]);
-if ($attempt) {
-    $config['blocksresolved'] = (int)$attempt->blocksresolved;
-}
-
-echo $OUTPUT->header();
-
-if (has_capability('mod/playerland:manage', $context)) {
-    $manageurl = new moodle_url('/mod/playerland/manage_questions.php', ['id' => $cm->id]);
-    echo html_writer::div(
-        html_writer::link($manageurl, get_string('managequestions', 'mod_playerland'), ['class' => 'btn btn-secondary']),
-        'mod-playerland-actions'
-    );
-}
-
-if (!empty($playerland->intro)) {
-    echo $OUTPUT->box(
-        format_module_intro('playerland', $playerland, $cm->id),
-        'generalbox',
-        'intro'
-    );
-}
-
-$introseen = (bool)get_user_preferences('mod_playerland_introseen', false);
-
-echo \html_writer::start_div('', ['id' => 'playerland-game-wrapper']);
-echo \html_writer::div('', '', ['id' => 'playerland-game-container']);
-
-if (!$introseen) {
-    echo \html_writer::start_div('', [
-        'id' => 'playerland-intro',
-        'role' => 'dialog',
-        'aria-modal' => 'true',
-        'aria-labelledby' => 'playerland-intro-title',
-    ]);
-    echo \html_writer::tag('h2', get_string('introtitle', 'mod_playerland'), ['id' => 'playerland-intro-title']);
-    echo \html_writer::start_tag('ul', ['class' => 'playerland-intro-list']);
-    foreach (['controlmove', 'controljump', 'controlroll', 'controlcrouch', 'controlfullscreen'] as $key) {
-        echo \html_writer::tag('li', get_string($key, 'mod_playerland'));
-    }
-    echo \html_writer::end_tag('ul');
-    echo \html_writer::tag(
-        'button',
-        get_string('gotit', 'mod_playerland'),
-        ['type' => 'button', 'class' => 'btn btn-primary', 'id' => 'playerland-intro-dismiss']
-    );
-    echo \html_writer::end_div();
-
+if (!$templatecontext['introseen']) {
     $PAGE->requires->js_call_amd('mod_playerland/intro', 'init', [$playerland->id]);
 }
-
-echo \html_writer::end_div();
-
-// Pass config securely via json script tag as per rules.
-echo \html_writer::tag(
-    'script',
-    json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP),
-    ['type' => 'application/json', 'id' => 'mod-playerland-config']
-);
 
 // Phaser itself is loaded dynamically from inside game.js (mirrors
 // filter_mathjaxloader's loadMathJax()), not queued here as a static <script> — a static
 // tag would sit in the page's footer and race core_message/message_drawer.js.
 $PAGE->requires->js_call_amd('mod_playerland/game', 'init');
 
+echo $OUTPUT->header();
+echo $OUTPUT->render_from_template('mod_playerland/view', $templatecontext);
 echo $OUTPUT->footer();
