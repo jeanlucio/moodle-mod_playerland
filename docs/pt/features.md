@@ -48,6 +48,10 @@
 * 🧪 **Testes automatizados:** uma suíte PHPUnit cobrindo a lógica de notas e toda a API externa,
   verde tanto no Moodle 5.1 (PHPUnit 11) quanto no Moodle 4.5 (PHPUnit 9) — veja
   [Testes Automatizados](#testing).
+* 💾 **Backup e restauração:** suporte completo ao backup/restore moodle2, incluindo "Duplicar
+  atividade" — perguntas, opções e (quando os dados de usuário são incluídos) o progresso de cada
+  estudante e suas respostas corretas distintas, com os ids corretamente remapeados na cópia
+  restaurada.
 
 ## ⏳ Em desenvolvimento / Planejado
 
@@ -74,8 +78,6 @@
 * 📚 **Integração com o Banco de Questões do Moodle:** o banco interno por atividade de hoje é
   uma escolha deliberada de escopo da v1; puxar do Banco de Questões do próprio curso é uma ideia
   pós-v1.
-* 💾 **Backup e restauração:** `FEATURE_BACKUP_MOODLE2` está declarado `false` hoje,
-  honestamente, até a implementação real existir.
 * 🏔️ **Um segundo clima visual:** alternar entre uma aparência de campina e uma de ruínas (já
   esboçada na Fase 9) ao longo das dez fases, a partir do mesmo tileset base.
 

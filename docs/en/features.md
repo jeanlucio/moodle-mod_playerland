@@ -46,6 +46,9 @@
 * 🧪 **Automated Tests:** A PHPUnit suite covering the gradebook logic and the full external API,
   green on both Moodle 5.1 (PHPUnit 11) and Moodle 4.5 (PHPUnit 9) — see
   [Automated Tests](#testing).
+* 💾 **Backup & Restore:** Full moodle2 backup/restore support, including "Duplicate activity" —
+  questions, options, and (when user data is included) every student's progress and distinct
+  correct answers, with ids correctly remapped to the restored copy.
 
 ## ⏳ In Development / Planned
 
@@ -71,8 +74,6 @@
   a committed decision yet.
 * 📚 **Moodle Question Bank Integration:** Today's internal per-activity bank is a deliberate v1
   scope choice; drawing from the course's own Question Bank is a post-v1 idea.
-* 💾 **Backup & Restore:** `FEATURE_BACKUP_MOODLE2` is currently declared `false`, honestly,
-  until the real implementation lands.
 * 🏔️ **A Second Visual Biome:** Alternating a grassland and a ruins look (already sketched in
   Level 9) across the ten levels, from the same base tileset.
 

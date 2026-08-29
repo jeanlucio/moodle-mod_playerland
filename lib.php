@@ -55,7 +55,7 @@ function playerland_supports(string $feature): mixed {
         case FEATURE_MOD_PURPOSE:
             return MOD_PURPOSE_INTERACTIVECONTENT;
         case FEATURE_BACKUP_MOODLE2:
-            return false;
+            return true;
         default:
             return null;
     }

@@ -57,7 +57,7 @@ final class lib_supports_test extends \basic_testcase {
         $this->assertTrue(playerland_supports(FEATURE_GRADE_HAS_GRADE));
         $this->assertTrue(playerland_supports(FEATURE_GRADE_OUTCOMES));
         $this->assertSame(MOD_PURPOSE_INTERACTIVECONTENT, playerland_supports(FEATURE_MOD_PURPOSE));
-        $this->assertFalse(playerland_supports(FEATURE_BACKUP_MOODLE2));
+        $this->assertTrue(playerland_supports(FEATURE_BACKUP_MOODLE2));
         $this->assertNull(playerland_supports('unknown_feature'));
     }
 
