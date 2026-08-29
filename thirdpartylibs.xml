@@ -7,4 +7,11 @@
     <version>4.1.0</version>
     <licenseversion></licenseversion>
   </library>
+  <library>
+    <location>assets</location>
+    <name>Sunny Land (Ansimuz)</name>
+    <license>CC0</license>
+    <version></version>
+    <licenseversion></licenseversion>
+  </library>
 </libraries>
