@@ -458,19 +458,19 @@ define([
             }
 
             /**
-             * Moves the respawn point forward. Rendered as a sign post, tinted navy blue
-             * to read as an unclaimed waypoint (distinct from a plain, untinted readable
-             * sign) until reachCheckpoint() turns it green on activation. setTint() is
+             * Moves the respawn point forward. Rendered as a paw-print sign post — a
+             * distinct sprite from the readable sign, so the two functions read apart
+             * even before the tint is noticed — tinted navy blue to read as an unclaimed
+             * waypoint until reachCheckpoint() turns it green on activation. setTint() is
              * multiplicative, so a neutral grey tint only darkens the brown sprite
              * without shifting its hue — verified against the actual sprite pixels
              * (Multiply blend simulation) before picking this blue, which the same
-             * check confirmed reads as clearly distinct from both the natural sign and
-             * the claimed (green) state.
+             * check confirmed reads as clearly distinct from the claimed (green) state.
              *
              * @param {object} obj The Tiled object.
              */
             createCheckpoint(obj) {
-                const flag = this.checkpoints.create(obj.x, obj.y, 'props', 'sign');
+                const flag = this.checkpoints.create(obj.x, obj.y, 'props', 'sign-checkpoint');
                 flag.setOrigin(0.5, 1).refreshBody();
                 flag.setTint(0x4a8fd9);
                 flag.setData('claimed', false);
@@ -484,7 +484,7 @@ define([
              * @param {object} obj The Tiled object.
              */
             createSign(obj) {
-                const post = this.add.image(obj.x, obj.y, 'props', 'sign').setOrigin(0.5, 1).setDepth(1);
+                const post = this.add.image(obj.x, obj.y, 'props', 'sign-info').setOrigin(0.5, 1).setDepth(1);
                 this.signs.push({
                     x: obj.x,
                     y: obj.y,

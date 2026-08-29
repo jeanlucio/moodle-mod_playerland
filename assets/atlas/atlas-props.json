@@ -127,6 +127,24 @@
 	"pivot": {"x":0.5,"y":0.5}
 },
 {
+	"filename": "sign-checkpoint",
+	"frame": {"x":22,"y":335,"w":18,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":20},
+	"sourceSize": {"w":18,"h":20},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "sign-info",
+	"frame": {"x":2,"y":335,"w":18,"h":20},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":20},
+	"sourceSize": {"w":18,"h":20},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
 	"filename": "skulls",
 	"frame": {"x":36,"y":2,"w":16,"h":10},
 	"rotated": false,
@@ -185,8 +203,7 @@
 	"version": "1.0",
 	"image": "atlas-props.png",
 	"format": "RGBA8888",
-	"size": {"w":109,"h":333},
-	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:0bd9942c57d8ce2036df6d61b997ffee:d3b00db9bd52d2286ca490f22371e19f:7367abe05465f33555345994fbb3342e$"
+	"size": {"w":109,"h":357},
+	"scale": "1"
 }
 }
