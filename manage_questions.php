@@ -58,17 +58,21 @@ if ($mform->is_cancelled()) {
     redirect($url);
 } else if ($data = $mform->get_data()) {
     // Save data.
+    $now = time();
+
     $qrecord = new stdClass();
     $qrecord->playerlandid = $playerland->id;
     $qrecord->questiontext = $data->questiontext['text'];
     $qrecord->questionformat = $data->questiontext['format'];
     $qrecord->topic = (int)($data->topic ?? 0);
+    $qrecord->timemodified = $now;
 
     if (!empty($data->qid)) {
         $qrecord->id = $data->qid;
         $DB->update_record('playerland_q', $qrecord);
         $qid = $qrecord->id;
     } else {
+        $qrecord->timecreated = $now;
         $qid = $DB->insert_record('playerland_q', $qrecord);
     }
 
@@ -92,11 +96,13 @@ if ($mform->is_cancelled()) {
         $optrecord->questionid = $qid;
         $optrecord->optiontext = $opttext;
         $optrecord->iscorrect = $iscorrect;
+        $optrecord->timemodified = $now;
 
         if ($optid && isset($existingopts[$optid])) {
             $optrecord->id = $optid;
             $DB->update_record('playerland_opts', $optrecord);
         } else {
+            $optrecord->timecreated = $now;
             $DB->insert_record('playerland_opts', $optrecord);
         }
     }

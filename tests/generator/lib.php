@@ -66,11 +66,15 @@ class mod_playerland_generator extends testing_module_generator {
     public function create_question(int $playerlandid, array $options = []): \stdClass {
         global $DB;
 
+        $now = time();
+
         $question = new \stdClass();
         $question->playerlandid = $playerlandid;
         $question->questiontext = $options['questiontext'] ?? 'What is 2 + 2?';
         $question->questionformat = FORMAT_PLAIN;
         $question->topic = $options['topic'] ?? 0;
+        $question->timecreated = $now;
+        $question->timemodified = $now;
         $question->id = $DB->insert_record('playerland_q', $question);
 
         $answers = $options['answers'] ?? ['4' => true, '5' => false];
@@ -79,6 +83,8 @@ class mod_playerland_generator extends testing_module_generator {
                 'questionid' => $question->id,
                 'optiontext' => (string) $text,
                 'iscorrect' => $iscorrect ? 1 : 0,
+                'timecreated' => $now,
+                'timemodified' => $now,
             ]);
         }
 
