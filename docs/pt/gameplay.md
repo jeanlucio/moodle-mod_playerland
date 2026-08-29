@@ -37,8 +37,8 @@ adicionar um nunca exige tocar em `play.js`:
 | Escada | Trecho vertical escalável |
 | Saliência de mão única | Sólida só por cima, deixa o jogador passar por baixo |
 | Manivela + porta | Puxar uma manivela abre a porta vinculada a ela |
-| Checkpoint | Move o ponto de renascimento para frente |
-| Placa | Mostra uma linha curta de dica quando o jogador está perto, sem precisar de tecla de interação |
+| Checkpoint | Move o ponto de renascimento para frente. Renderizado com o mesmo poste da placa, mas tingido de cinza até ser ativado (aí fica verde), para não ser confundido com uma placa de leitura |
+| Placa | Mostra uma linha curta de dica quando o jogador está perto, sem precisar de tecla de interação. Sempre na cor natural da madeira |
 
 Cair num buraco, ou ser atingido por um perigo/inimigo, renasce o jogador automaticamente no
 último checkpoint; uma tecla de renascimento manual existe caso o jogador fique preso.
