@@ -458,16 +458,21 @@ define([
             }
 
             /**
-             * Moves the respawn point forward. Rendered as a sign post, tinted grey to
-             * read as an unclaimed waypoint (distinct from a plain, untinted readable
-             * sign) until reachCheckpoint() turns it green on activation.
+             * Moves the respawn point forward. Rendered as a sign post, tinted navy blue
+             * to read as an unclaimed waypoint (distinct from a plain, untinted readable
+             * sign) until reachCheckpoint() turns it green on activation. setTint() is
+             * multiplicative, so a neutral grey tint only darkens the brown sprite
+             * without shifting its hue — verified against the actual sprite pixels
+             * (Multiply blend simulation) before picking this blue, which the same
+             * check confirmed reads as clearly distinct from both the natural sign and
+             * the claimed (green) state.
              *
              * @param {object} obj The Tiled object.
              */
             createCheckpoint(obj) {
                 const flag = this.checkpoints.create(obj.x, obj.y, 'props', 'sign');
                 flag.setOrigin(0.5, 1).refreshBody();
-                flag.setTint(0x9a9a9a);
+                flag.setTint(0x4a8fd9);
                 flag.setData('claimed', false);
                 flag.setData('spawnX', obj.x);
                 flag.setData('spawnY', obj.y - 20);

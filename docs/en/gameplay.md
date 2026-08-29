@@ -36,7 +36,7 @@ never requires touching `play.js`:
 | Ladder | Climbable vertical tile run |
 | One-way ledge | Solid from above only, lets the player pass through from below |
 | Crank + door | Pulling a crank opens its linked door |
-| Checkpoint | Moves the respawn point forward. Rendered with the same signpost art as a sign, but tinted grey until claimed (then green), so it's never mistaken for a readable sign |
+| Checkpoint | Moves the respawn point forward. Rendered with the same signpost art as a sign, but tinted navy blue until claimed (then green), so it's never mistaken for a readable sign |
 | Sign | Shows a short hint line when the player is close, no interaction key needed. Always the wood's natural colour |
 
 Falling into a pit, or getting hit by a hazard/enemy, respawns the player automatically at the
