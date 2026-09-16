@@ -23,6 +23,15 @@
  */
 
 /**
+ * Tells Moodle this plugin uses a branded icon (disables purpose recolour filter).
+ *
+ * @return bool True, since this plugin's icon should keep its own colours.
+ */
+function mod_playerland_is_branded(): bool {
+    return true;
+}
+
+/**
  * Indicates API features that the playerland module supports.
  *
  * @param string $feature The feature to check.
