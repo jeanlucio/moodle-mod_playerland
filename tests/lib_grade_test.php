@@ -33,6 +33,7 @@ namespace mod_playerland;
  * @covers ::playerland_grade_item_update
  * @covers ::playerland_grade_item_delete
  * @covers ::playerland_update_grades
+ * @covers ::playerland_update_instance
  */
 final class lib_grade_test extends \advanced_testcase {
     #[\Override]
@@ -418,5 +419,99 @@ final class lib_grade_test extends \advanced_testcase {
         ], MUST_EXIST);
         $graded = $DB->get_record('grade_grades', ['itemid' => $itemid, 'userid' => 2], '*', MUST_EXIST);
         $this->assertEqualsWithDelta(50.0, (float) $graded->rawgrade, 0.001);
+    }
+
+    /**
+     * Records a student's progress the way the game does: one playerland_ans row per
+     * distinct question answered correctly, and the attempt's blocksresolved count.
+     *
+     * @param \stdClass $instance Activity instance.
+     * @param int $userid Student id.
+     * @param int[] $answertimes When each correct answer was given.
+     * @param int $attemptmodified When the attempt row was last touched.
+     * @return void
+     */
+    private function record_progress(\stdClass $instance, int $userid, array $answertimes, int $attemptmodified): void {
+        global $DB;
+
+        foreach (array_values($answertimes) as $i => $time) {
+            $DB->insert_record('playerland_ans', (object) [
+                'playerlandid' => $instance->id,
+                'userid' => $userid,
+                'questionid' => 1000 + $i,
+                'timecreated' => $time,
+            ]);
+        }
+        $DB->insert_record('playerland_atmpt', (object) [
+            'playerlandid' => $instance->id,
+            'userid' => $userid,
+            'currentlevel' => 1,
+            'blocksresolved' => count($answertimes),
+            'timecreated' => min($answertimes ?: [$attemptmodified]),
+            'timemodified' => $attemptmodified,
+        ]);
+    }
+
+    /**
+     * The grade carries when the student earned it: the latest correct answer. The attempt's
+     * own timemodified is no substitute, since merely loading the game touches it.
+     *
+     * @return void
+     */
+    public function test_update_grades_reports_time_of_latest_correct_answer(): void {
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_playerland');
+        $instance = $generator->create_instance(['course' => $course->id, 'grade' => 100, 'targetquestions' => 4]);
+        $this->record_progress($instance, 2, [1700000000, 1700003600], 1700090000);
+
+        playerland_update_grades($instance, 2);
+
+        $grades = grade_get_grades($course->id, 'mod', 'playerland', $instance->id, [2]);
+        $this->assertEqualsWithDelta(50.0, (float) $grades->items[0]->grades[2]->grade, 0.001);
+        $this->assertEquals(1700003600, $grades->items[0]->grades[2]->datesubmitted);
+    }
+
+    /**
+     * With no correct answer yet there is nothing submitted to date.
+     *
+     * @return void
+     */
+    public function test_update_grades_reports_no_datesubmitted_without_correct_answers(): void {
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_playerland');
+        $instance = $generator->create_instance(['course' => $course->id, 'grade' => 100, 'targetquestions' => 4]);
+        $this->record_progress($instance, 2, [], 1700090000);
+
+        playerland_update_grades($instance, 2);
+
+        $grades = grade_get_grades($course->id, 'mod', 'playerland', $instance->id, [2]);
+        $this->assertNull($grades->items[0]->grades[2]->datesubmitted);
+    }
+
+    /**
+     * Changing the target recomputes every grade (playerland_update_instance() already did),
+     * and the recomputed grade keeps the time of the latest correct answer rather than
+     * looking like a new submission made when the teacher saved the settings.
+     *
+     * @return void
+     */
+    public function test_settings_recompute_keeps_time_of_latest_correct_answer(): void {
+        global $DB;
+
+        $course = $this->getDataGenerator()->create_course();
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_playerland');
+        $instance = $generator->create_instance(['course' => $course->id, 'grade' => 100, 'targetquestions' => 4]);
+        $this->record_progress($instance, 2, [1700000000, 1700003600], 1700090000);
+        playerland_update_grades($instance, 2);
+
+        $data = $DB->get_record('playerland', ['id' => $instance->id], '*', MUST_EXIST);
+        $data->instance = $instance->id;
+        $data->coursemodule = $instance->cmid;
+        $data->targetquestions = 2;
+        playerland_update_instance($data);
+
+        $grades = grade_get_grades($course->id, 'mod', 'playerland', $instance->id, [2]);
+        $this->assertEqualsWithDelta(100.0, (float) $grades->items[0]->grades[2]->grade, 0.001);
+        $this->assertEquals(1700003600, $grades->items[0]->grades[2]->datesubmitted);
     }
 }

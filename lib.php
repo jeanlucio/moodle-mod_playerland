@@ -190,15 +190,22 @@ function playerland_update_grades(stdClass $playerland, int $userid = 0): void {
         return;
     }
 
+    // The grade is the progress so far, so it was last submitted at the latest correct
+    // answer. The attempt's own timemodified is no substitute: merely loading the game
+    // refreshes it without any new progress.
+    $sql = "SELECT a.id, a.userid, a.blocksresolved, MAX(ans.timecreated) AS lastcorrect
+              FROM {playerland_atmpt} a
+         LEFT JOIN {playerland_ans} ans ON ans.playerlandid = a.playerlandid AND ans.userid = a.userid
+             WHERE a.playerlandid = :playerlandid";
     $params = ['playerlandid' => $playerland->id];
-    $where = 'playerlandid = :playerlandid';
 
     if ($userid > 0) {
-        $where .= ' AND userid = :userid';
+        $sql .= ' AND a.userid = :userid';
         $params['userid'] = $userid;
     }
 
-    $attempts = $DB->get_records_select('playerland_atmpt', $where, $params);
+    $sql .= ' GROUP BY a.id, a.userid, a.blocksresolved';
+    $attempts = $DB->get_records_sql($sql, $params);
 
     if (empty($attempts)) {
         if ($userid > 0) {
@@ -217,6 +224,7 @@ function playerland_update_grades(stdClass $playerland, int $userid = 0): void {
         $grade = new stdClass();
         $grade->userid = $attempt->userid;
         $grade->rawgrade = playerland_calculate_grade($playerland, (int)$attempt->blocksresolved);
+        $grade->datesubmitted = $attempt->lastcorrect ? (int)$attempt->lastcorrect : null;
         $grades[$attempt->userid] = $grade;
     }
 
