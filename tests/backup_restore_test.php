@@ -309,4 +309,34 @@ final class backup_restore_test extends \advanced_testcase {
 
         return $newcourse;
     }
+
+    /**
+     * The links inside a question and its options survive a backup and restore: the backup encodes
+     * every link in the text columns it writes, so the restore has to decode each one a student reads.
+     *
+     * @return void
+     */
+    public function test_backup_restore_decodes_links_in_question_and_option_text(): void {
+        global $CFG, $DB;
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $instance = $this->generator->create_instance(['course' => $course->id]);
+        $link = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
+        $this->generator->create_question($instance->id, [
+            'questiontext' => 'Read <a href="' . $link . '">the course</a> first.',
+            'topic' => 1,
+            'answers' => ['See <a href="' . $link . '">the course</a>' => true, 'None' => false],
+        ]);
+
+        $newcourse = $this->backup_and_restore_into_new_course($course);
+
+        $newlink = $CFG->wwwroot . '/course/view.php?id=' . $newcourse->id;
+        $newinstance = $DB->get_record('playerland', ['course' => $newcourse->id], '*', MUST_EXIST);
+        $newquestion = $DB->get_record('playerland_q', ['playerlandid' => $newinstance->id], '*', MUST_EXIST);
+        $this->assertStringContainsString($newlink, $newquestion->questiontext);
+        $options = $DB->get_records('playerland_opts', ['questionid' => $newquestion->id]);
+        $this->assertStringContainsString($newlink, implode(' ', array_column($options, 'optiontext')));
+        $this->assertStringNotContainsString('$@', $newquestion->questiontext . implode(' ', array_column($options, 'optiontext')));
+    }
 }

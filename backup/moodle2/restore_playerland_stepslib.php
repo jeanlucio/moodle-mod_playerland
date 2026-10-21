@@ -121,12 +121,15 @@ class restore_playerland_activity_structure_step extends restore_activity_struct
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
 
         $data->questionid = $this->get_new_parentid('playerland_question');
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('playerland_opts', $data);
+        $newitemid = $DB->insert_record('playerland_opts', $data);
+        // Registered so the activity task can decode the links in the option text.
+        $this->set_mapping('playerland_option', $oldid, $newitemid);
     }
 
     /**

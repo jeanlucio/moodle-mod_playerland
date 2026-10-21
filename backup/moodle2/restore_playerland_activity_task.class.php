@@ -58,6 +58,10 @@ class restore_playerland_activity_task extends restore_activity_task {
     public static function define_decode_contents(): array {
         return [
             new restore_decode_content('playerland', ['intro'], 'playerland'),
+            // The backup transformer encodes the links inside every text column it writes, so the
+            // question and option text the students read have to be decoded back too.
+            new restore_decode_content('playerland_q', ['questiontext'], 'playerland_question'),
+            new restore_decode_content('playerland_opts', ['optiontext'], 'playerland_option'),
         ];
     }
 
